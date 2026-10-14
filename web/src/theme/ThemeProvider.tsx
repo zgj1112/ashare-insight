@@ -21,6 +21,14 @@ import {
   type RowCount,
 } from './rows'
 import {
+  DEFAULT_LAYOUT,
+  CARD_META,
+  readLayout,
+  writeLayout,
+  type CardId,
+  type LayoutConfig,
+} from './layout'
+import {
   applyTheme,
   readPreference,
   resolveTheme,
@@ -44,6 +52,12 @@ interface DisplayContextValue {
   /** 榜单行数档位（统一作用于首页所有榜单） */
   rowCount: RowCount
   setRowCount: (count: RowCount) => void
+  /** 首页卡片布局（顺序 + 显隐） */
+  layout: LayoutConfig
+  isVisible: (id: CardId) => boolean
+  toggleCard: (id: CardId) => void
+  moveCard: (id: CardId, direction: 'up' | 'down') => void
+  resetLayout: () => void
 }
 
 const DisplayContext = createContext<DisplayContextValue | null>(null)
@@ -60,6 +74,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   )
   const [rowCount, setRowCountState] = useState<RowCount>(() =>
     typeof window === 'undefined' ? 10 : readRowCount(),
+  )
+  const [layout, setLayout] = useState<LayoutConfig>(() =>
+    typeof window === 'undefined' ? DEFAULT_LAYOUT : readLayout(),
   )
 
   // 偏好变化时同步到 DOM 与本地存储
@@ -78,6 +95,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     writeRowCount(rowCount)
   }, [rowCount])
+
+  useEffect(() => {
+    writeLayout(layout)
+  }, [layout])
 
   // 跟随系统时，监听系统配色变化
   useEffect(() => {
@@ -102,6 +123,37 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const setRowCount = useCallback((next: RowCount) => setRowCountState(next), [])
 
+  const isVisible = useCallback((id: CardId) => !layout.hidden.includes(id), [layout.hidden])
+
+  const toggleCard = useCallback((id: CardId) => {
+    setLayout((current) => ({
+      ...current,
+      hidden: current.hidden.includes(id)
+        ? current.hidden.filter((item) => item !== id)
+        : [...current.hidden, id],
+    }))
+  }, [])
+
+  /** 在「同一区域」内部上下移动，避免并排卡片被拆散 */
+  const moveCard = useCallback((id: CardId, direction: 'up' | 'down') => {
+    setLayout((current) => {
+      const order = [...current.order]
+      const index = order.indexOf(id)
+      if (index < 0) return current
+      const region = CARD_META[id].region
+      const step = direction === 'up' ? -1 : 1
+      let cursor = index + step
+      while (cursor >= 0 && cursor < order.length && CARD_META[order[cursor]].region !== region) {
+        cursor += step
+      }
+      if (cursor < 0 || cursor >= order.length) return current
+      ;[order[index], order[cursor]] = [order[cursor], order[index]]
+      return { ...current, order }
+    })
+  }, [])
+
+  const resetLayout = useCallback(() => setLayout({ ...DEFAULT_LAYOUT, order: [...DEFAULT_LAYOUT.order] }), [])
+
   const value = useMemo<DisplayContextValue>(
     () => ({
       theme: resolved,
@@ -112,8 +164,27 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       setFontSize,
       rowCount,
       setRowCount,
+      layout,
+      isVisible,
+      toggleCard,
+      moveCard,
+      resetLayout,
     }),
-    [resolved, preference, setPreference, toggle, fontSize, setFontSize, rowCount, setRowCount],
+    [
+      resolved,
+      preference,
+      setPreference,
+      toggle,
+      fontSize,
+      setFontSize,
+      rowCount,
+      setRowCount,
+      layout,
+      isVisible,
+      toggleCard,
+      moveCard,
+      resetLayout,
+    ],
   )
 
   return <DisplayContext.Provider value={value}>{children}</DisplayContext.Provider>

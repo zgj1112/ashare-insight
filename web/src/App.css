@@ -266,7 +266,8 @@
 
 /* ------------------------------------------------------- 主题切换 / 刷新键 */
 .theme-toggle,
-.refresh-btn {
+.refresh-btn,
+.icon-text-btn {
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -279,12 +280,14 @@
 }
 
 .theme-toggle:hover,
+.icon-text-btn:hover,
 .refresh-btn:hover:not(:disabled) {
   background: var(--panel-soft);
   border-color: var(--accent);
 }
 
-.theme-toggle svg {
+.theme-toggle svg,
+.icon-text-btn svg {
   display: block;
 }
 
@@ -415,6 +418,37 @@
 }
 
 /* -------------------------------------------------------------- 内容分栏 */
+/* 卡片容器：单卡整行；并排区域两栏，只剩一张时自动占满整行 */
+.card-block,
+.card-slot {
+  min-width: 0;
+}
+
+.card-block > .panel,
+.card-slot > .panel {
+  height: 100%;
+}
+
+.card-pair {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+
+.card-pair.single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.empty-layout {
+  padding: 40px 16px;
+  text-align: center;
+  font-size: 0.9643rem;
+  color: var(--text-faint);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+}
+
 .content-grid {
   display: grid;
   gap: 18px;
@@ -946,7 +980,8 @@
 }
 
 @media (max-width: 1024px) {
-  .content-grid {
+  .content-grid,
+  .card-pair {
     grid-template-columns: minmax(0, 1fr);
   }
 

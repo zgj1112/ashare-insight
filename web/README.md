@@ -18,27 +18,32 @@ npm run preview       # 预览构建产物
 ```
 public/theme-init.js          首屏应用本地主题（防闪烁，不参与打包）
 src/
-├─ App.tsx                    看板页面组装
+├─ App.tsx                    页面路由与共享数据（总览、自选各拉一次）
+├─ router.ts                  hash 路由：#/ 看板、#/settings 展示设置
+├─ pages/
+│  ├─ DashboardPage.tsx       看板页：按布局配置渲染卡片，并排区域自适应
+│  └─ SettingsPage.tsx        展示设置页：区域内调序、显隐开关、恢复默认
 ├─ api/market.ts              后端接口封装（含统一错误处理）
 ├─ hooks/
-│  ├─ useMarket.ts            useOverview（自动刷新）/ useSearch（防抖搜索）
+│  ├─ useMarket.ts            useOverview（自动刷新，按行数档位传 limit）/ useSearch
 │  └─ useWatchlist.ts         自选列表（本地持久化 + 批量行情）
 ├─ theme/
-│  ├─ ThemeProvider.tsx       ThemeProvider 与 useTheme（主题 + 字号 + 行数）
+│  ├─ ThemeProvider.tsx       ThemeProvider 与 useTheme（主题 + 字号 + 行数 + 布局）
 │  ├─ theme.ts                明暗类型、本地读写、系统偏好解析
 │  ├─ font.ts                 字号档位（小/中/大）与根字号应用
-│  └─ rows.ts                 榜单行数档位（10/20/30）
+│  ├─ rows.ts                 榜单行数档位（10/20/30）
+│  └─ layout.ts               首页卡片顺序与显隐（含区域定义）
 ├─ styles/theme.css           全局 CSS 变量（明/暗两套 + 根字号）与基础样式
 ├─ components/
 │  ├─ AppHeader.tsx           品牌、搜索框、刷新
-│  ├─ TopControls.tsx         右上角控制行：市场状态、数据时间、行数、字体、主题
+│  ├─ TopControls.tsx         右上角控制行：状态、数据时间、展示设置入口、行数、字体、主题
 │  ├─ ThemeToggle.tsx         明/暗主题切换按钮
 │  ├─ FontScaleToggle.tsx     字体档位（小/中/大）切换
 │  ├─ RowCountToggle.tsx      行数档位（10/20/30）切换
 │  ├─ IndexBoard.tsx          指数卡片
-│  ├─ FlowList.tsx            主力净流入榜 / 净流出榜（FlowBoards）
+│  ├─ FlowList.tsx            主力净流入榜
 │  ├─ WatchList.tsx           我的自选（超过限高内部滚动，表头吸顶）
-│  ├─ RankList.tsx            榜单表格（涨幅/成交量等共用，支持限高滚动）
+│  ├─ RankList.tsx            榜单表格（涨幅/成交量共用）
 │  ├─ MarketBreadth.tsx       涨跌家数与涨跌停统计
 │  └─ MarketMetrics.tsx       平均/中位涨跌幅等市场概览
 ├─ types/market.ts            与后端 app/models/market.py 对应的类型
@@ -57,8 +62,17 @@ src/
   `--shadow-panel`、`--skeleton-a/b`、`--zebra`、`--scrollbar-thumb`
 - 切换方式：`useTheme().toggle()`（浅↔深）、`useTheme().setPreference('system')`（跟随系统）、
   `useTheme().setFontSize('small' | 'medium' | 'large')`（字号档位）、
-  `useTheme().setRowCount(10 | 20 | 30)`（榜单行数，会触发总览接口按 limit 重新拉取）；
-  最终写入 `<html data-theme data-font>`，CSS 变量据此生效（行数不进 DOM，只影响请求与渲染条数）
+  `useTheme().setRowCount(10 | 20 | 30)`（榜单行数，会触发总览接口按 limit 重新拉取）、
+  `useTheme().toggleCard(id)` / `moveCard(id, 'up' | 'down')` / `resetLayout()`（卡片布局）；
+  最终写入 `<html data-theme data-font>`，CSS 变量据此生效（行数与布局不进 DOM）
+
+## 卡片布局约定
+
+- 卡片清单与区域定义集中在 `src/theme/layout.ts`：`CARD_META` 描述每张卡片，`PAIRS` 在
+  `DashboardPage` 中声明哪些卡片并排展示
+- 新增卡片：在 `CardId` 与 `CARD_META` 里登记 → 在 `DashboardPage` 的 `renderCard` 中渲染 →
+  如需并排，加进 `PAIRS` 与 `DEFAULT_CARD_ORDER`；展示设置页会自动出现该卡片，无需改动设置页
+- 布局只保存「顺序 + 隐藏项」，未知/缺失的卡片在读取时会自动补全，因此升级不会丢配置
 - 显示设置的入口统一放在 `TopControls`（首页头部第二行靠右），新增页面若要复用，
   把它挂到自己的顶部即可，状态仍由同一个 `useTheme()` 提供
 - 常用 px→rem 换算（基准 14px）：`11px=0.7857` `11.5px=0.8214` `12px=0.8571` `12.5px=0.8929`

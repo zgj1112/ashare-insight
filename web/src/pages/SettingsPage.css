@@ -1,0 +1,197 @@
+/** 展示设置页样式。 */
+
+.settings-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 16px;
+}
+
+.settings-group {
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--bg-soft);
+  overflow: hidden;
+}
+
+.settings-group-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--panel-soft);
+}
+
+.settings-region {
+  font-size: 0.8571rem;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.settings-hint {
+  font-size: 0.7857rem;
+  color: var(--text-faint);
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--flat-soft);
+}
+
+.settings-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.settings-card:last-child {
+  border-bottom: 0;
+}
+
+.settings-card.is-hidden .settings-card-main {
+  opacity: 0.5;
+}
+
+.settings-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.settings-card-title {
+  font-size: 0.9643rem;
+  font-weight: 600;
+}
+
+.settings-card-desc {
+  font-size: 0.8214rem;
+  color: var(--text-faint);
+}
+
+.settings-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.icon-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text-dim);
+  font-size: 0.9286rem;
+  line-height: 1;
+}
+
+.icon-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.icon-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* 开关 */
+.switch {
+  position: relative;
+  width: 42px;
+  height: 24px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--flat-soft);
+  transition: background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.switch .switch-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  transition: transform 0.18s ease, background-color 0.18s ease;
+}
+
+.switch.on {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+
+.switch.on .switch-knob {
+  transform: translateX(18px);
+  background: var(--accent);
+}
+
+.switch-text {
+  width: 44px;
+  font-size: 0.7857rem;
+  color: var(--text-faint);
+}
+
+.settings-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  border-top: 1px solid var(--border-soft);
+  background: var(--panel-soft);
+}
+
+.settings-state {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 0.8214rem;
+  color: var(--text-faint);
+}
+
+.settings-changed {
+  color: var(--accent-text);
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+}
+
+.tips-list {
+  margin: 0;
+  padding: 16px 20px 18px 34px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.8929rem;
+  color: var(--text-dim);
+}
+
+.tips-list li::marker {
+  color: var(--text-faint);
+}
+
+.back-btn {
+  text-decoration: none;
+}
+
+@media (max-width: 720px) {
+  .settings-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}

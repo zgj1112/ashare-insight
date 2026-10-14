@@ -7,6 +7,7 @@
 
 import type { MarketOverview } from '../types/market'
 import { formatClock } from '../utils/format'
+import { navigate, usePage } from '../router'
 import { FontScaleToggle } from './FontScaleToggle'
 import { RowCountToggle } from './RowCountToggle'
 import { ThemeToggle } from './ThemeToggle'
@@ -19,6 +20,7 @@ interface Props {
 export function TopControls({ overview, lastUpdated }: Props) {
   const state = overview?.market_state ?? 'closed'
   const stateText = overview?.market_state_text ?? '加载中'
+  const page = usePage()
 
   return (
     <div className="top-controls">
@@ -33,6 +35,14 @@ export function TopControls({ overview, lastUpdated }: Props) {
       </div>
 
       <div className="top-divider" aria-hidden="true" />
+
+      <button
+        type="button"
+        className="icon-text-btn"
+        onClick={() => navigate(page === 'settings' ? 'home' : 'settings')}
+      >
+        {page === 'settings' ? '← 返回看板' : '展示设置'}
+      </button>
 
       <RowCountToggle />
       <FontScaleToggle />
