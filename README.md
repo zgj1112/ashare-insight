@@ -8,7 +8,13 @@
 
 ## 页面预览
 
-![行情总览看板](docs/screenshot-dashboard.png)
+深色（默认）：
+
+![行情总览看板（深色）](docs/screenshot-dashboard.png)
+
+浅色：
+
+![行情总览看板（浅色）](docs/screenshot-dashboard-light.png)
 
 看板包含：
 
@@ -20,7 +26,16 @@
 6. **成交额榜**：成交金额前 10 名，附换手率
 7. **搜索**：支持 6 位代码（`600519`）或中文名称（`茅台`）实时检索，结果可直接「+ 自选」
 
-顶部显示交易状态（交易中/午间休市/已收盘）、数据时间，页面与自选列表均每 30 秒自动刷新，也可手动刷新。
+顶部显示交易状态（交易中/午间休市/已收盘）、数据时间与主题切换按钮，页面与自选列表均每 30 秒自动刷新，也可手动刷新。
+
+### 主题（明/暗）
+
+- 右上角按钮一键切换深色 / 浅色，选择记录在 `localStorage`（键：`ashare-insight:theme`），刷新与重启后保持
+- **颜色全部走 CSS 变量**，定义集中在 `web/src/styles/theme.css`，各页面样式只引用变量，新增页面无需写两套配色
+- 变量约定：`--bg / --panel / --border / --text*` 控制层级，`--up / --down / --flat` 控制涨跌平，`--accent` 为主色；另有 `--shadow-panel`、`--skeleton-*`、`--zebra` 等
+- 涨跌色按主题分别取值：深色 `#f5455c / #16b979`，浅色 `#d92038 / #0a9d5f`，两种背景下都保持辨识度
+- 首屏由 `web/public/theme-init.js` 在样式表之前写 `<html data-theme>`，避免「先深后浅」的闪烁
+- 已预留「跟随系统」：`useTheme().setPreference('system')` 即跟随系统配色并监听变化，需要时在界面上暴露入口即可
 
 ### 自选列表说明
 
@@ -91,11 +106,15 @@ ashare-insight/
 │        └─ market_service.py   # 总览聚合、涨跌统计、榜单、搜索
 └─ web/
    ├─ vite.config.ts            # /api 代理到后端
+   ├─ public/theme-init.js      # 首屏主题脚本（防闪烁，不参与打包）
    └─ src/
       ├─ App.tsx                # 看板页面组装
       ├─ api/market.ts          # 接口封装
-      ├─ hooks/useMarket.ts     # 数据获取、自动刷新、搜索防抖
-      ├─ components/            # AppHeader / IndexBoard / RankList / MarketBreadth / MarketMetrics
+      ├─ hooks/                 # useMarket（总览/搜索）、useWatchlist（自选）
+      ├─ theme/                 # ThemeProvider、useTheme、明暗类型与读写
+      ├─ styles/theme.css       # 全局 CSS 变量（明/暗两套）与基础样式
+      ├─ components/            # AppHeader / IndexBoard / WatchList / RankList
+      │                         # MarketBreadth / MarketMetrics / ThemeToggle
       ├─ types/market.ts        # 与后端模型对应的类型
       └─ utils/format.ts        # 涨跌配色、时间与代码格式化
 ```
@@ -130,6 +149,7 @@ ashare-insight/
 - [ ] K 线数据源接入（腾讯 `web.ifzq.gtimg.cn` 的 fqkline 接口已验证可用）
 - [ ] 自选股分组、拖拽排序与到价提醒
 - [ ] 榜单行点击跳转个股详情，支持板块/市场筛选
+- [ ] 在界面上暴露「跟随系统」主题选项
 - [ ] 多数据源自动切换与降级（东方财富为主、新浪/腾讯备用）
 - [ ] 数据落盘（SQLite / Parquet）与历史行情批量回补
 

@@ -1,4 +1,9 @@
-/** 看板布局样式。 */
+/**
+ * 页面样式。
+ *
+ * 颜色一律使用 styles/theme.css 里定义的 CSS 变量，便于全局切换明暗主题；
+ * 这里不再写死任何具体色值（阴影用 --shadow-panel，骨架屏用 --skeleton-*）。
+ */
 
 .app {
   display: flex;
@@ -31,7 +36,7 @@
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #4c8dff, #7a5cff);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   color: #fff;
   font-weight: 700;
   font-size: 18px;
@@ -76,22 +81,22 @@
 
 .market-state.state-trading {
   color: var(--up);
-  border-color: rgba(245, 69, 92, 0.4);
+  border-color: var(--up-border);
   background: var(--up-soft);
 }
 
 .market-state.state-trading .dot {
   background: var(--up);
-  box-shadow: 0 0 0 0 rgba(245, 69, 92, 0.6);
+  box-shadow: 0 0 0 0 var(--up-border);
   animation: pulse 1.8s infinite;
 }
 
 @keyframes pulse {
   70% {
-    box-shadow: 0 0 0 7px rgba(245, 69, 92, 0);
+    box-shadow: 0 0 0 7px transparent;
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(245, 69, 92, 0);
+    box-shadow: 0 0 0 0 transparent;
   }
 }
 
@@ -127,7 +132,6 @@
   background: var(--panel);
   color: var(--text);
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .search input::placeholder {
@@ -158,7 +162,7 @@
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--shadow-panel);
   max-height: 380px;
   overflow-y: auto;
 }
@@ -240,23 +244,32 @@
 }
 
 .tag-warn {
-  color: #ffb020;
-  background: rgba(255, 176, 32, 0.14);
+  color: var(--warn-text);
+  background: var(--warn-soft);
 }
 
-/* ---------------------------------------------------------------- 刷新键 */
+/* ------------------------------------------------------- 主题切换 / 刷新键 */
+.theme-toggle,
 .refresh-btn {
-  padding: 9px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
   border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--panel);
   color: var(--text);
-  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
 }
 
+.theme-toggle:hover,
 .refresh-btn:hover:not(:disabled) {
   background: var(--panel-soft);
   border-color: var(--accent);
+}
+
+.theme-toggle svg {
+  display: block;
 }
 
 .refresh-btn:disabled {
@@ -279,17 +292,17 @@
   gap: 16px;
   padding: 12px 16px;
   border-radius: var(--radius);
-  border: 1px solid rgba(245, 69, 92, 0.4);
+  border: 1px solid var(--up-border);
   background: var(--up-soft);
-  color: #ffb3bf;
+  color: var(--up-text);
 }
 
 .alert button {
   padding: 6px 14px;
   border-radius: 8px;
-  border: 1px solid rgba(245, 69, 92, 0.5);
+  border: 1px solid var(--up-border);
   background: transparent;
-  color: #ffb3bf;
+  color: var(--up-text);
 }
 
 /* ------------------------------------------------------------ 指数卡片 */
@@ -450,6 +463,10 @@
   border-bottom: 1px solid var(--border-soft);
 }
 
+.rank-table tbody tr:nth-child(even) {
+  background: var(--zebra);
+}
+
 .rank-table tbody tr:last-child td {
   border-bottom: 0;
 }
@@ -526,7 +543,7 @@
   border-radius: 999px;
   font-size: 11px;
   font-weight: 500;
-  color: var(--accent);
+  color: var(--accent-text);
   background: var(--accent-soft);
 }
 
@@ -583,12 +600,11 @@
   color: var(--text-faint);
   font-size: 15px;
   line-height: 1;
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
 
 .remove-btn:hover {
   color: var(--up);
-  border-color: rgba(245, 69, 92, 0.5);
+  border-color: var(--up-border);
   background: var(--up-soft);
 }
 
@@ -614,7 +630,7 @@
 .panel-error {
   padding: 14px 16px;
   font-size: 12.5px;
-  color: #ffb3bf;
+  color: var(--up-text);
   background: var(--up-soft);
 }
 
@@ -629,17 +645,16 @@
 .watch-btn {
   padding: 4px 10px;
   border-radius: 8px;
-  border: 1px solid rgba(76, 141, 255, 0.5);
+  border: 1px solid var(--accent-border);
   background: var(--accent-soft);
-  color: #9dc0ff;
+  color: var(--accent-text);
   font-size: 12px;
   white-space: nowrap;
-  transition: background 0.15s, color 0.15s;
 }
 
 .watch-btn:hover:not(:disabled) {
-  background: rgba(76, 141, 255, 0.28);
-  color: #cfe0ff;
+  background: var(--accent-soft-hover);
+  color: var(--accent-text-strong);
 }
 
 .watch-btn.watched {
@@ -681,7 +696,7 @@
 }
 
 .bar-flat {
-  background: #46536b;
+  background: var(--flat-bar);
 }
 
 .bar-down {
@@ -745,24 +760,11 @@
   font-weight: 600;
 }
 
-/* ------------------------------------------------------------ 涨跌配色 */
-.trend-up {
-  color: var(--up);
-}
-
-.trend-down {
-  color: var(--down);
-}
-
-.trend-flat {
-  color: var(--flat);
-}
-
 /* ---------------------------------------------------------------- 骨架屏 */
 .skeleton-line {
   height: 10px;
   border-radius: 6px;
-  background: linear-gradient(90deg, #1b2437, #26314a, #1b2437);
+  background: linear-gradient(90deg, var(--skeleton-a), var(--skeleton-b), var(--skeleton-a));
   background-size: 200% 100%;
   animation: shimmer 1.4s infinite;
 }
@@ -845,5 +847,9 @@
   .rank-table th,
   .rank-table td {
     padding: 8px 10px;
+  }
+
+  .theme-toggle span {
+    display: none;
   }
 }

@@ -1,0 +1,223 @@
+/**
+ * 全局主题样式。
+ *
+ * 所有颜色都通过 CSS 变量提供，切换主题只需改动 <html> 上的 data-theme，
+ * 后续新增页面直接引用变量即可自动适配，不需要写两套样式。
+ *
+ * 命名约定：
+ *   --bg / --bg-soft / --bg-elevated   背景层级
+ *   --panel / --panel-soft             面板背景
+ *   --border / --border-soft           描边
+ *   --text / --text-dim / --text-faint 文字层级
+ *   --up / --down / --flat             涨跌平（A 股习惯：涨红跌绿）
+ *   --accent                           主色
+ *   --shadow-*                         阴影
+ */
+
+/* ------------------------------------------------------------ 深色（默认） */
+:root,
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #0b0f17;
+  --bg-soft: #121826;
+  --bg-elevated: #1c2537;
+  --panel: #141b2b;
+  --panel-soft: #182033;
+
+  --border: #22304a;
+  --border-soft: #1b2537;
+
+  --text: #e6ebf5;
+  --text-dim: #8b98b0;
+  --text-faint: #5f6c85;
+
+  /* 涨红跌绿 */
+  --up: #f5455c;
+  --up-strong: #ff8095;
+  --up-soft: rgba(245, 69, 92, 0.14);
+  --up-border: rgba(245, 69, 92, 0.4);
+  --up-text: #ffb3bf;
+
+  --down: #16b979;
+  --down-soft: rgba(22, 185, 121, 0.14);
+
+  --flat: #8b98b0;
+  --flat-soft: rgba(139, 152, 176, 0.14);
+  --flat-bar: #46536b;
+
+  --accent: #4c8dff;
+  --accent-strong: #7a5cff;
+  --accent-soft: rgba(76, 141, 255, 0.14);
+  --accent-border: rgba(76, 141, 255, 0.5);
+  --accent-text: #9dc0ff;
+  --accent-text-strong: #cfe0ff;
+  --accent-soft-hover: rgba(76, 141, 255, 0.28);
+
+  --warn-text: #ffb020;
+  --warn-soft: rgba(255, 176, 32, 0.14);
+  --zebra: rgba(255, 255, 255, 0.03);
+
+  --skeleton-a: #1b2437;
+  --skeleton-b: #26314a;
+
+  --shadow-panel: 0 18px 40px rgba(0, 0, 0, 0.45);
+  --scrollbar-thumb: #2a3550;
+
+  --body-glow-1: rgba(76, 141, 255, 0.1);
+  --body-glow-2: rgba(245, 69, 92, 0.08);
+}
+
+/* -------------------------------------------------------------- 浅色 */
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #f2f4f9;
+  --bg-soft: #ffffff;
+  --bg-elevated: #eaeef7;
+  --panel: #ffffff;
+  --panel-soft: #f4f6fb;
+
+  --border: #d8dfec;
+  --border-soft: #e8ecf5;
+
+  --text: #16202f;
+  --text-dim: #5a6880;
+  --text-faint: #8b97ac;
+
+  --up: #d92038;
+  --up-strong: #a81528;
+  --up-soft: rgba(217, 32, 56, 0.1);
+  --up-border: rgba(217, 32, 56, 0.32);
+  --up-text: #a81528;
+
+  --down: #0a9d5f;
+  --down-soft: rgba(10, 157, 95, 0.12);
+
+  --flat: #7d8798;
+  --flat-soft: rgba(125, 135, 152, 0.14);
+  --flat-bar: #ccd4e2;
+
+  --accent: #2563eb;
+  --accent-strong: #6d3ff0;
+  --accent-soft: rgba(37, 99, 235, 0.1);
+  --accent-border: rgba(37, 99, 235, 0.35);
+  --accent-text: #1d4ed8;
+  --accent-text-strong: #16368f;
+  --accent-soft-hover: rgba(37, 99, 235, 0.18);
+
+  --warn-text: #b26a00;
+  --warn-soft: rgba(178, 106, 0, 0.12);
+  --zebra: rgba(22, 32, 47, 0.03);
+
+  --skeleton-a: #e6ebf5;
+  --skeleton-b: #f3f6fb;
+
+  --shadow-panel: 0 16px 36px rgba(20, 32, 58, 0.14);
+  --scrollbar-thumb: #c6cedd;
+
+  --body-glow-1: rgba(37, 99, 235, 0.08);
+  --body-glow-2: rgba(217, 32, 56, 0.05);
+}
+
+/* -------------------------------------------------------- 基础与全局样式 */
+:root {
+  --radius: 12px;
+  --radius-sm: 8px;
+
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Microsoft YaHei', 'Hiragino Sans GB', Roboto, sans-serif;
+  --mono: 'SF Mono', ui-monospace, Consolas, 'Cascadia Mono', monospace;
+
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+/* 切换主题时统一过渡，避免颜色跳变 */
+body,
+.panel,
+.index-card,
+.search input,
+.search-panel,
+.theme-toggle,
+.refresh-btn,
+.breadth-cell,
+.metric-cell {
+  transition: background-color 0.22s ease, border-color 0.22s ease, color 0.22s ease;
+}
+
+body {
+  background:
+    radial-gradient(1100px 520px at 12% -8%, var(--body-glow-1), transparent 60%),
+    radial-gradient(900px 460px at 92% -12%, var(--body-glow-2), transparent 60%),
+    var(--bg);
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+input {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* 数字统一等宽字体，便于纵向比对 */
+.num,
+.price,
+.percent {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ---------------------------------------------------------------- 涨跌配色 */
+.trend-up {
+  color: var(--up);
+}
+
+.trend-down {
+  color: var(--down);
+}
+
+.trend-flat {
+  color: var(--flat);
+}

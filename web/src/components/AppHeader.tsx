@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useSearch } from '../hooks/useMarket'
 import type { MarketOverview } from '../types/market'
 import { formatClock, plainCode, trendClass } from '../utils/format'
+import { ThemeToggle } from './ThemeToggle'
 
 interface Props {
   overview: MarketOverview | null
@@ -117,6 +118,8 @@ export function AppHeader({
         <button type="button" className="refresh-btn" onClick={onRefresh} disabled={refreshing}>
           {refreshing ? '刷新中…' : '刷新'}
         </button>
+
+        <ThemeToggle />
       </div>
     </header>
   )
