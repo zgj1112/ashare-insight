@@ -1,7 +1,13 @@
 /** 展示设置页：调整首页卡片的显示顺序与显隐。 */
 
 import { TopControls } from '../components/TopControls'
-import { CARD_META, DEFAULT_CARD_ORDER, groupByRegion, type CardId } from '../theme/layout'
+import {
+  buildRows,
+  CARD_META,
+  DEFAULT_CARD_ORDER,
+  type CardId,
+  type LayoutRow,
+} from '../theme/layout'
 import { useTheme } from '../theme/ThemeProvider'
 import type { MarketOverview } from '../types/market'
 import { formatClock } from '../utils/format'
@@ -15,7 +21,8 @@ interface Props {
 export function SettingsPage({ overview, lastUpdated }: Props) {
   const { layout, isVisible, toggleCard, moveCard, resetLayout, rowCount, fontSize, theme } =
     useTheme()
-  const groups = groupByRegion(layout.order)
+  // 与首页一致：先按可见性切分成行，再逐行展示
+  const rows = buildRows(layout.order, isVisible)
   const visibleCount = layout.order.filter((id) => isVisible(id)).length
   const orderChanged =
     layout.order.length !== DEFAULT_CARD_ORDER.length ||
@@ -40,9 +47,10 @@ export function SettingsPage({ overview, lastUpdated }: Props) {
         <section className="panel settings-panel">
           <header className="panel-head">
             <div>
-              <h2>卡片管理</h2>
+              <h2>卡片顺序</h2>
               <p>
-                同一区域的卡片会并排展示，因此顺序调整只在区域内生效；隐藏的卡片不会请求、也不会占位
+                用 ↑↓ 把整块卡片上下移动一行；并排的两张卡片可先在行内左右互换。
+                这里的排布就是首页的实际排布
               </p>
             </div>
             <span className="panel-count">
@@ -51,36 +59,24 @@ export function SettingsPage({ overview, lastUpdated }: Props) {
           </header>
 
           <div className="settings-body">
-            {groups.map((group) => (
-              <div key={group.region} className="settings-group">
-                <div className="settings-group-head">
-                  <span className="settings-region">{group.region}</span>
-                  {group.cards.length > 1 && (
-                    <span className="settings-hint">
-                      {CARD_META[group.cards[0]].regionPaired ? '并排区域' : '整行展示'}
-                    </span>
-                  )}
-                </div>
-
-                {group.cards.map((id) => (
-                  <CardRow
-                    key={id}
-                    id={id}
-                    visible={isVisible(id)}
-                    index={group.cards.indexOf(id)}
-                    total={group.cards.length}
-                    onToggle={() => toggleCard(id)}
-                    onMove={(direction) => moveCard(id, direction)}
-                  />
-                ))}
-              </div>
+            {rows.map((row, rowIndex) => (
+              <RowBlock
+                key={rowKey(row)}
+                row={row}
+                rowIndex={rowIndex}
+                rowCount={rows.length}
+                isVisible={isVisible}
+                onToggle={toggleCard}
+                onMove={moveCard}
+              />
             ))}
           </div>
 
           <footer className="settings-foot">
             <div className="settings-state">
               <span>
-                当前：行数 {rowCount} · 字体 {fontSize === 'small' ? '小' : fontSize === 'medium' ? '中' : '大'} · 主题{' '}
+                当前：行数 {rowCount} · 字体{' '}
+                {fontSize === 'small' ? '小' : fontSize === 'medium' ? '中' : '大'} · 主题{' '}
                 {theme === 'dark' ? '深色' : '浅色'}
               </span>
               {changed && <span className="settings-changed">已自定义布局</span>}
@@ -99,9 +95,10 @@ export function SettingsPage({ overview, lastUpdated }: Props) {
             </div>
           </header>
           <ul className="tips-list">
+            <li>顺序按「一行」为单位调整；半宽卡片成对出现，被整行卡片隔开时会各自占满整行</li>
+            <li>隐藏某张卡片后，与它并排的另一张会自动占满整行；全部隐藏时首页会给出提示</li>
             <li>「我的自选」的股票增删在看板页的搜索框里完成，最多 60 只</li>
-            <li>右上角的行数档位（10 / 20 / 30）只影响榜单条数，不影响自选</li>
-            <li>隐藏「涨幅榜」时，「成交量榜」会自动占满整行；两者都隐藏则整块区域消失</li>
+            <li>右上角的行数档位（10 / 20 / 30）只影响榜单条数，不影响自选与板块</li>
             <li>数据每 30 秒自动刷新，与设置页共用同一份行情数据</li>
           </ul>
         </section>
@@ -117,16 +114,56 @@ export function SettingsPage({ overview, lastUpdated }: Props) {
   )
 }
 
+function rowKey(row: LayoutRow): string {
+  return row.type === 'single' ? row.id : row.ids.join('-')
+}
+
+interface RowBlockProps {
+  row: LayoutRow
+  rowIndex: number
+  rowCount: number
+  isVisible: (id: CardId) => boolean
+  onToggle: (id: CardId) => void
+  onMove: (id: CardId, direction: 'up' | 'down') => void
+}
+
+/** 一行卡片：整行卡片单张显示，并排卡片左右并置（与首页一致） */
+function RowBlock({ row, rowIndex, rowCount, isVisible, onToggle, onMove }: RowBlockProps) {
+  const ids = row.type === 'single' ? [row.id] : row.ids
+  return (
+    <div className={`settings-row ${ids.length > 1 ? 'is-pair' : ''}`}>
+      <div className="settings-row-head">
+        <span className="settings-order">{rowIndex + 1}</span>
+        <span className="settings-row-label">
+          {ids.length > 1 ? '并排一行' : CARD_META[ids[0]].span === 'half' ? '半宽（独占一行）' : '整行'}
+        </span>
+      </div>
+
+      {ids.map((id) => (
+        <CardRow
+          key={id}
+          id={id}
+          rowIndex={rowIndex}
+          rowCount={rowCount}
+          visible={isVisible(id)}
+          onToggle={() => onToggle(id)}
+          onMove={(direction) => onMove(id, direction)}
+        />
+      ))}
+    </div>
+  )
+}
+
 interface CardRowProps {
   id: CardId
+  rowIndex: number
+  rowCount: number
   visible: boolean
-  index: number
-  total: number
   onToggle: () => void
   onMove: (direction: 'up' | 'down') => void
 }
 
-function CardRow({ id, visible, index, total, onToggle, onMove }: CardRowProps) {
+function CardRow({ id, rowIndex, rowCount, visible, onToggle, onMove }: CardRowProps) {
   const meta = CARD_META[id]
   return (
     <div className={`settings-card ${visible ? '' : 'is-hidden'}`}>
@@ -139,9 +176,9 @@ function CardRow({ id, visible, index, total, onToggle, onMove }: CardRowProps) 
         <button
           type="button"
           className="icon-btn"
-          title="上移"
+          title="上移一行"
           aria-label={`${meta.title} 上移`}
-          disabled={index === 0}
+          disabled={rowIndex === 0}
           onClick={() => onMove('up')}
         >
           ↑
@@ -149,9 +186,9 @@ function CardRow({ id, visible, index, total, onToggle, onMove }: CardRowProps) 
         <button
           type="button"
           className="icon-btn"
-          title="下移"
+          title="下移一行"
           aria-label={`${meta.title} 下移`}
-          disabled={index === total - 1}
+          disabled={rowIndex === rowCount - 1}
           onClick={() => onMove('down')}
         >
           ↓

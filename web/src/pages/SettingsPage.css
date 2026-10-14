@@ -8,55 +8,61 @@
 .settings-body {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 12px;
   padding: 16px;
 }
 
-.settings-group {
+.settings-row {
+  display: grid;
+  gap: 10px;
+  padding: 10px;
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-sm);
-  background: var(--bg-soft);
-  overflow: hidden;
-}
-
-.settings-group-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 14px;
-  border-bottom: 1px solid var(--border-soft);
   background: var(--panel-soft);
 }
 
-.settings-region {
-  font-size: 0.8571rem;
-  font-weight: 600;
-  color: var(--text-dim);
+.settings-row.is-pair {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.settings-hint {
+.settings-row-head {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-row-label {
   font-size: 0.7857rem;
   color: var(--text-faint);
-  padding: 1px 8px;
-  border-radius: 999px;
-  background: var(--flat-soft);
 }
 
 .settings-card {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   padding: 12px 14px;
-  border-bottom: 1px solid var(--border-soft);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--bg-soft);
 }
 
-.settings-card:last-child {
-  border-bottom: 0;
+.settings-card.is-hidden {
+  opacity: 0.55;
+  border-style: dashed;
 }
 
-.settings-card.is-hidden .settings-card-main {
-  opacity: 0.5;
+.settings-order {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: var(--flat-soft);
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 0.7857rem;
 }
 
 .settings-card-main {
@@ -64,9 +70,12 @@
   flex-direction: column;
   gap: 2px;
   min-width: 0;
+  flex: 1;
 }
 
 .settings-card-title {
+  display: flex;
+  align-items: center;
   font-size: 0.9643rem;
   font-weight: 600;
 }

@@ -22,7 +22,7 @@ import {
 } from './rows'
 import {
   DEFAULT_LAYOUT,
-  CARD_META,
+  moveInRows,
   readLayout,
   writeLayout,
   type CardId,
@@ -56,6 +56,7 @@ interface DisplayContextValue {
   layout: LayoutConfig
   isVisible: (id: CardId) => boolean
   toggleCard: (id: CardId) => void
+  /** 在全局顺序中上下移动（-1 上移 / 1 下移），可跨卡片交换位置 */
   moveCard: (id: CardId, direction: 'up' | 'down') => void
   resetLayout: () => void
 }
@@ -134,20 +135,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }))
   }, [])
 
-  /** 在「同一区域」内部上下移动，避免并排卡片被拆散 */
+  /** 按「行」上移/下移：行内先左右互换，再与相邻行交换 */
   const moveCard = useCallback((id: CardId, direction: 'up' | 'down') => {
     setLayout((current) => {
-      const order = [...current.order]
-      const index = order.indexOf(id)
-      if (index < 0) return current
-      const region = CARD_META[id].region
-      const step = direction === 'up' ? -1 : 1
-      let cursor = index + step
-      while (cursor >= 0 && cursor < order.length && CARD_META[order[cursor]].region !== region) {
-        cursor += step
-      }
-      if (cursor < 0 || cursor >= order.length) return current
-      ;[order[index], order[cursor]] = [order[cursor], order[index]]
+      const order = moveInRows(current.order, id, direction)
+      if (order === current.order) return current
       return { ...current, order }
     })
   }, [])

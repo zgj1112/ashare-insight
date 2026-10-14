@@ -99,7 +99,11 @@ def _to_sector_item(raw: dict, kind: str) -> SectorItem:
 
 
 def get_sector_rank(kind: str = "industry", limit: int = 10) -> list[SectorItem]:
-    """板块涨幅榜：kind 为 industry（行业）或 concept（概念），按涨跌幅降序。"""
+    """板块涨幅榜：kind 为 industry（行业）或 concept（概念），按涨跌幅降序。
+
+    板块总数有限（行业约 50、概念 200+），一次取全量后按需切片，
+    因此不同 limit 共用同一份缓存。
+    """
     if kind not in ("industry", "concept"):
         kind = "industry"
     cache_key = f"sector|{kind}"
@@ -295,7 +299,7 @@ def get_overview(limit: int = 10) -> MarketOverview:
             _rank, "change_percent", "desc", limit, True, GAINERS_MAX_PERCENT
         )
         future_volume = pool.submit(_rank, "volume", "desc", limit)
-        future_sectors = pool.submit(get_sector_rank, "industry", limit)
+        future_sectors = pool.submit(get_sector_rank, "industry", 8)
         future_losers = pool.submit(_rank, "change_percent", "asc", limit)
         future_turnover = pool.submit(_rank, "amount", "desc", limit)
 

@@ -28,7 +28,6 @@ function App() {
           lastUpdated={lastUpdated}
           onRefresh={refresh}
           watchlist={watchlist}
-          rowCount={rowCount}
         />
       )}
     </>

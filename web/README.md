@@ -42,7 +42,7 @@ src/
 │  ├─ RowCountToggle.tsx      行数档位（10/20/30）切换
 │  ├─ IndexBoard.tsx          指数卡片
 │  ├─ FlowList.tsx            主力净流入榜
-│  ├─ SectorList.tsx          板块涨幅榜（行业 / 概念切换）
+│  ├─ SectorList.tsx          板块涨幅横条（行业 / 概念切换）
 │  ├─ WatchList.tsx           我的自选（不限制高度，全部展示）
 │  ├─ RankList.tsx            榜单表格（涨幅/成交量共用）
 │  ├─ MarketBreadth.tsx       涨跌家数与涨跌停统计
@@ -69,12 +69,15 @@ src/
 
 ## 卡片布局约定
 
-- 卡片清单与区域定义集中在 `src/theme/layout.ts`：`CARD_META` 描述每张卡片（`regionPaired: true`
-  表示该区域并排展示），`PAIRS` 在 `DashboardPage` 中声明并排组合
-- 新增卡片：在 `CardId` 与 `CARD_META` 里登记 → 在 `DashboardPage` 的 `renderCard` 中渲染 →
-  如需并排，加进 `PAIRS` 与 `DEFAULT_CARD_ORDER`；展示设置页会自动出现该卡片，无需改动设置页
+- 卡片清单与摆放规则集中在 `src/theme/layout.ts`：`CARD_META` 声明每张卡片的 `span`
+  （`full` 独占整行 / `half` 与相邻半宽卡片并排），`buildRows()` 把顺序切成行，
+  `moveInRows()` 实现「按行」上下移动与行内左右互换
+- 看板与管理页都调用同一组函数，因此**设置页的排布始终等于首页的排布**
+- 新增卡片：在 `CardId` 与 `CARD_META` 里登记 → 在 `DashboardPage` 的 `renderCard` 中渲染；
+  展示设置页会自动出现该卡片，无需改动设置页
 - 布局只保存「顺序 + 隐藏项」，未知/缺失的卡片在读取时会自动补全；
-  **调整默认顺序或默认显隐时必须把 `LAYOUT_VERSION` 加 1**，否则老用户的本地配置会盖住新默认
+  **调整默认顺序、改动卡片清单或 span 时必须把 `LAYOUT_VERSION` 加 1**，
+  否则老用户的本地配置会盖住新默认
 - 列表容器（`.list-scroll` / `.flow-scroll` / `.watch-scroll`）不要加 `max-height`，
   卡片按内容自然展开是既定行为
 - 显示设置的入口统一放在 `TopControls`（首页头部第二行靠右），新增页面若要复用，

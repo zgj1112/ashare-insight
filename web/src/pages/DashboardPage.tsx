@@ -11,14 +11,12 @@ import { SectorList } from '../components/SectorList'
 import { TopControls } from '../components/TopControls'
 import { WatchList } from '../components/WatchList'
 import { useTheme } from '../theme/ThemeProvider'
+import { buildRows } from '../theme/layout'
 import type { CardId } from '../theme/layout'
 import type { MarketOverview, MarketStats, Quote } from '../types/market'
 
 /** 与后端 GAINERS_MAX_PERCENT 保持一致，仅用于文案展示 */
 const GAINERS_MAX_PERCENT = 11
-
-/** 并排展示的区域：仅这里的卡片放在同一行，其余卡片独占整行 */
-const PAIRS: CardId[][] = [['gainers', 'volume']]
 
 const EMPTY_STATS: MarketStats = {
   total: 0,
@@ -53,7 +51,6 @@ interface Props {
   lastUpdated: number | null
   onRefresh: () => void
   watchlist: WatchlistBinding
-  rowCount: number
 }
 
 export function DashboardPage({
@@ -64,7 +61,6 @@ export function DashboardPage({
   lastUpdated,
   onRefresh,
   watchlist,
-  rowCount,
 }: Props) {
   const { isVisible, layout } = useTheme()
   const stats = data?.stats ?? EMPTY_STATS
@@ -84,9 +80,7 @@ export function DashboardPage({
       case 'main_inflow':
         return <FlowBoards items={data?.main_inflow ?? []} loading={loading} />
       case 'sectors':
-        return (
-          <SectorList items={data?.top_sectors ?? []} loading={loading} rowCount={rowCount} />
-        )
+        return <SectorList items={data?.top_sectors ?? []} loading={loading} />
       case 'gainers':
         return (
           <RankList
@@ -116,34 +110,31 @@ export function DashboardPage({
     }
   }
 
-  // 按配置顺序渲染；遇到并排区域时，把该区域内可见的卡片一起放进同一行
-  const blocks: ReactNode[] = []
-  const done = new Set<CardId>()
+  // 按全局顺序切分出行：整行卡片单独一行，相邻的两张半宽卡片并排
+  const rows = buildRows(layout.order, isVisible)
 
-  for (const id of layout.order) {
-    if (done.has(id) || !isVisible(id)) continue
-    const pair = PAIRS.find((group) => group.includes(id))
-    if (pair) {
-      const visible = pair.filter((item) => isVisible(item))
-      visible.forEach((item) => done.add(item))
-      blocks.push(
-        <div className={`card-pair ${visible.length === 1 ? 'single' : ''}`} key={pair.join('-')}>
-          {visible.map((item) => (
-            <div className="card-slot" key={item} data-card={item}>
-              {renderCard(item)}
-            </div>
-          ))}
-        </div>,
+  const blocks: ReactNode[] = rows.map((row) => {
+    if (row.type === 'single') {
+      return (
+        <div className="card-block" key={row.id} data-card={row.id}>
+          {renderCard(row.id)}
+        </div>
       )
-      continue
     }
-    done.add(id)
-    blocks.push(
-      <div className="card-block" key={id} data-card={id}>
-        {renderCard(id)}
-      </div>,
+    return (
+      <div
+        className={`card-pair ${row.ids.length === 1 ? 'single' : ''}`}
+        key={row.ids.join('-')}
+        data-cards={row.ids.join(',')}
+      >
+        {row.ids.map((id) => (
+          <div className="card-slot" key={id} data-card={id}>
+            {renderCard(id)}
+          </div>
+        ))}
+      </div>
     )
-  }
+  })
 
   return (
     <div className="app">
