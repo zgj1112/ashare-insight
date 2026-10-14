@@ -565,9 +565,20 @@
   align-items: stretch;
 }
 
-.flow-scroll {
-  max-height: 30rem;
+/* 榜单列表：10 条时完整展示，20/30 条时限高滚动（表头吸顶）
+   33rem ≈ 462px，正好容纳 10 行 + 表头（中号字体下实测 454px） */
+.flow-scroll,
+.list-scroll {
+  max-height: 33rem;
   overflow-y: auto;
+}
+
+.flow-scroll .rank-table thead th,
+.list-scroll .rank-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--panel);
 }
 
 .flow-table .col-net,
@@ -592,20 +603,6 @@
 
 .net-out {
   color: var(--down);
-}
-
-/* 榜单限高滚动（行数较多时，表头保持可见） */
-.list-scroll {
-  max-height: 30rem;
-  overflow-y: auto;
-}
-
-.flow-scroll .rank-table thead th,
-.list-scroll .rank-table thead th {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  background: var(--panel);
 }
 
 /* -------------------------------------------------------------- 自选列表 */

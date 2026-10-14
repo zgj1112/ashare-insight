@@ -18,10 +18,12 @@ router = APIRouter(prefix="/api/market", tags=["market"])
 
 
 @router.get("/overview", response_model=MarketOverview, summary="行情总览看板")
-def overview() -> MarketOverview:
-    """一次性返回指数卡片、涨跌统计与三个榜单，供首页渲染。"""
+def overview(
+    limit: int = Query(10, ge=1, le=30, description="每个榜单返回的条数（前端行数档位 10/20/30）"),
+) -> MarketOverview:
+    """一次性返回指数卡片、涨跌统计与各榜单，供首页渲染。"""
     try:
-        return market_service.get_overview()
+        return market_service.get_overview(limit=limit)
     except Exception as exc:  # 数据源异常统一转 502，前端展示重试
         raise HTTPException(status_code=502, detail=f"行情数据获取失败: {exc}") from exc
 

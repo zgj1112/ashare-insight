@@ -14,8 +14,7 @@ interface TableProps {
   highlight?: boolean
 }
 
-function FlowTable({ title, subtitle, items, loading, tone, highlight }: TableProps) {
-  return (
+function FlowTable({ title, subtitle, items, loading, tone, highlight, skeletonCount = 10 }: TableProps & { skeletonCount?: number }) {  return (
     <section className="panel flow-panel">
       <header className="panel-head">
         <div>
@@ -44,7 +43,7 @@ function FlowTable({ title, subtitle, items, loading, tone, highlight }: TablePr
           </thead>
           <tbody>
             {loading && items.length === 0
-              ? Array.from({ length: 10 }, (_, index) => (
+              ? Array.from({ length: Math.min(skeletonCount, 12) }, (_, index) => (
                   <tr key={index} className="skeleton-row">
                     <td colSpan={6}>
                       <div className="skeleton-line w100" />
@@ -82,9 +81,10 @@ interface Props {
   inflow: FlowItem[]
   outflow: FlowItem[]
   loading: boolean
+  rowCount: number
 }
 
-export function FlowBoards({ inflow, outflow, loading }: Props) {
+export function FlowBoards({ inflow, outflow, loading, rowCount }: Props) {
   return (
     <div className="content-grid flow-grid">
       <FlowTable
@@ -94,6 +94,7 @@ export function FlowBoards({ inflow, outflow, loading }: Props) {
         loading={loading}
         tone="inflow"
         highlight
+        skeletonCount={rowCount}
       />
       <FlowTable
         title="主力净流出榜"
@@ -101,6 +102,7 @@ export function FlowBoards({ inflow, outflow, loading }: Props) {
         items={outflow}
         loading={loading}
         tone="outflow"
+        skeletonCount={rowCount}
       />
     </div>
   )

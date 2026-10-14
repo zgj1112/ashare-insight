@@ -11,8 +11,8 @@ interface Props {
   /** 右侧数值列，默认展示成交额 */
   displayValue?: (item: Quote) => string
   valueLabel?: string
-  /** 行数较多时限高滚动（如 20 条的主力榜） */
-  scrollRows?: number
+  /** 统一行数档位：骨架屏条数按它渲染，避免切换时高度跳动 */
+  rowCount?: number
 }
 
 export function RankList({
@@ -22,10 +22,10 @@ export function RankList({
   loading,
   displayValue,
   valueLabel = '成交额',
-  scrollRows,
+  rowCount,
 }: Props) {
   const renderValue = displayValue ?? ((item: Quote) => item.amount_fmt)
-  const skeletonCount = scrollRows ?? 8
+  const skeletonCount = Math.min(rowCount ?? 8, 12)
 
   return (
     <section className="panel">
@@ -37,7 +37,7 @@ export function RankList({
         <span className="panel-count">{loading ? '…' : `${items.length} 条`}</span>
       </header>
 
-      <div className={scrollRows ? 'list-scroll' : undefined}>
+      <div className="list-scroll">
         <table className="rank-table">
           <thead>
             <tr>

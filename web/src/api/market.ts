@@ -37,9 +37,9 @@ async function request<T>(path: string, signal?: AbortSignal): Promise<T> {
   return (await response.json()) as T
 }
 
-/** 行情总览看板数据 */
-export function fetchOverview(signal?: AbortSignal): Promise<MarketOverview> {
-  return request<MarketOverview>('/api/market/overview', signal)
+/** 行情总览看板数据；limit 为每个榜单返回的条数 */
+export function fetchOverview(limit: number, signal?: AbortSignal): Promise<MarketOverview> {
+  return request<MarketOverview>(`/api/market/overview?limit=${limit}`, signal)
 }
 
 /** 搜索标的 */

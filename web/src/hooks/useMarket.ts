@@ -16,8 +16,9 @@ interface OverviewState {
 /**
  * 拉取总览数据，并按 interval 定时刷新。
  * 首次加载展示骨架屏，之后刷新只做静默更新，避免页面闪烁。
+ * rowCount 变化（用户切换 10/20/30）时会立即重新拉取。
  */
-export function useOverview(interval = 30_000): OverviewState {
+export function useOverview(interval = 30_000, rowCount = 10): OverviewState {
   const [data, setData] = useState<MarketOverview | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -32,7 +33,7 @@ export function useOverview(interval = 30_000): OverviewState {
     const controller = new AbortController()
     if (hasData.current) setRefreshing(true)
 
-    fetchOverview(controller.signal)
+    fetchOverview(rowCount, controller.signal)
       .then((result) => {
         setData(result)
         setError(null)
@@ -49,7 +50,7 @@ export function useOverview(interval = 30_000): OverviewState {
       })
 
     return () => controller.abort()
-  }, [nonce])
+  }, [nonce, rowCount])
 
   useEffect(() => {
     if (interval <= 0) return

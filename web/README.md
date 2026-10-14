@@ -24,15 +24,17 @@ src/
 │  ├─ useMarket.ts            useOverview（自动刷新）/ useSearch（防抖搜索）
 │  └─ useWatchlist.ts         自选列表（本地持久化 + 批量行情）
 ├─ theme/
-│  ├─ ThemeProvider.tsx       ThemeProvider 与 useTheme（主题 + 字号）
+│  ├─ ThemeProvider.tsx       ThemeProvider 与 useTheme（主题 + 字号 + 行数）
 │  ├─ theme.ts                明暗类型、本地读写、系统偏好解析
-│  └─ font.ts                 字号档位（小/中/大）与根字号应用
+│  ├─ font.ts                 字号档位（小/中/大）与根字号应用
+│  └─ rows.ts                 榜单行数档位（10/20/30）
 ├─ styles/theme.css           全局 CSS 变量（明/暗两套 + 根字号）与基础样式
 ├─ components/
 │  ├─ AppHeader.tsx           品牌、搜索框、刷新
-│  ├─ TopControls.tsx         右上角控制行：市场状态、数据时间、字体档位、主题
+│  ├─ TopControls.tsx         右上角控制行：市场状态、数据时间、行数、字体、主题
 │  ├─ ThemeToggle.tsx         明/暗主题切换按钮
 │  ├─ FontScaleToggle.tsx     字体档位（小/中/大）切换
+│  ├─ RowCountToggle.tsx      行数档位（10/20/30）切换
 │  ├─ IndexBoard.tsx          指数卡片
 │  ├─ FlowList.tsx            主力净流入榜 / 净流出榜（FlowBoards）
 │  ├─ WatchList.tsx           我的自选（超过限高内部滚动，表头吸顶）
@@ -54,8 +56,9 @@ src/
   `--up / --up-soft / --down / --down-soft / --flat`（涨跌平）、`--accent*`（主色）、
   `--shadow-panel`、`--skeleton-a/b`、`--zebra`、`--scrollbar-thumb`
 - 切换方式：`useTheme().toggle()`（浅↔深）、`useTheme().setPreference('system')`（跟随系统）、
-  `useTheme().setFontSize('small' | 'medium' | 'large')`（字号档位）；
-  最终写入 `<html data-theme data-font>`，CSS 变量据此生效
+  `useTheme().setFontSize('small' | 'medium' | 'large')`（字号档位）、
+  `useTheme().setRowCount(10 | 20 | 30)`（榜单行数，会触发总览接口按 limit 重新拉取）；
+  最终写入 `<html data-theme data-font>`，CSS 变量据此生效（行数不进 DOM，只影响请求与渲染条数）
 - 显示设置的入口统一放在 `TopControls`（首页头部第二行靠右），新增页面若要复用，
   把它挂到自己的顶部即可，状态仍由同一个 `useTheme()` 提供
 - 常用 px→rem 换算（基准 14px）：`11px=0.7857` `11.5px=0.8214` `12px=0.8571` `12.5px=0.8929`

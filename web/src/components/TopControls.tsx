@@ -8,6 +8,7 @@
 import type { MarketOverview } from '../types/market'
 import { formatClock } from '../utils/format'
 import { FontScaleToggle } from './FontScaleToggle'
+import { RowCountToggle } from './RowCountToggle'
 import { ThemeToggle } from './ThemeToggle'
 
 interface Props {
@@ -33,6 +34,7 @@ export function TopControls({ overview, lastUpdated }: Props) {
 
       <div className="top-divider" aria-hidden="true" />
 
+      <RowCountToggle />
       <FontScaleToggle />
       <ThemeToggle />
     </div>

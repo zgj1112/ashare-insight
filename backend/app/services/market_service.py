@@ -13,6 +13,7 @@ from app.core.config import (
     DEFAULT_WATCHLIST,
     GAINERS_MAX_PERCENT,
     RANK_FETCH_SIZE,
+    ROW_COUNT_MAX,
     TTL_INDEX_QUOTE,
     TTL_RANK,
     TTL_SNAPSHOT,
@@ -240,22 +241,24 @@ def compute_stats(rows: list[dict]) -> MarketStats:
     return stats
 
 
-def get_overview() -> MarketOverview:
+def get_overview(limit: int = 10) -> MarketOverview:
     """总览看板聚合数据：指数 + 统计 + 榜单，并发拉取。
 
+    limit 为每个榜单返回的条数（前端「行数」档位：10/20/30）。
     首页当前展示：主力净流入榜（最优先）、涨幅榜（11% 以内）、成交量榜。
     top_losers / top_turnover 仍保留在响应里，供其他页面或后续扩展使用。
     """
+    limit = max(1, min(limit, ROW_COUNT_MAX))
     with ThreadPoolExecutor(max_workers=6) as pool:
         future_indices = pool.submit(get_indices)
-        future_inflow = pool.submit(_rank_main_inflow, 10, "desc")
-        future_outflow = pool.submit(_rank_main_inflow, 10, "asc")
+        future_inflow = pool.submit(_rank_main_inflow, limit, "desc")
+        future_outflow = pool.submit(_rank_main_inflow, limit, "asc")
         future_gainers = pool.submit(
-            _rank, "change_percent", "desc", 10, True, GAINERS_MAX_PERCENT
+            _rank, "change_percent", "desc", limit, True, GAINERS_MAX_PERCENT
         )
-        future_volume = pool.submit(_rank, "volume", "desc", 10)
-        future_losers = pool.submit(_rank, "change_percent", "asc", 10)
-        future_turnover = pool.submit(_rank, "amount", "desc", 10)
+        future_volume = pool.submit(_rank, "volume", "desc", limit)
+        future_losers = pool.submit(_rank, "change_percent", "asc", limit)
+        future_turnover = pool.submit(_rank, "amount", "desc", limit)
 
         indices = future_indices.result()
         inflow = future_inflow.result()

@@ -16,6 +16,11 @@ import {
   type FontSize,
 } from './font'
 import {
+  readRowCount,
+  writeRowCount,
+  type RowCount,
+} from './rows'
+import {
   applyTheme,
   readPreference,
   resolveTheme,
@@ -36,6 +41,9 @@ interface DisplayContextValue {
   /** 当前字体档位 */
   fontSize: FontSize
   setFontSize: (size: FontSize) => void
+  /** 榜单行数档位（统一作用于首页所有榜单） */
+  rowCount: RowCount
+  setRowCount: (count: RowCount) => void
 }
 
 const DisplayContext = createContext<DisplayContextValue | null>(null)
@@ -50,6 +58,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [fontSize, setFontSizeState] = useState<FontSize>(() =>
     typeof window === 'undefined' ? 'medium' : readFontSize(),
   )
+  const [rowCount, setRowCountState] = useState<RowCount>(() =>
+    typeof window === 'undefined' ? 10 : readRowCount(),
+  )
 
   // 偏好变化时同步到 DOM 与本地存储
   useEffect(() => {
@@ -63,6 +74,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     applyFontSize(fontSize)
     writeFontSize(fontSize)
   }, [fontSize])
+
+  useEffect(() => {
+    writeRowCount(rowCount)
+  }, [rowCount])
 
   // 跟随系统时，监听系统配色变化
   useEffect(() => {
@@ -85,9 +100,20 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const setFontSize = useCallback((next: FontSize) => setFontSizeState(next), [])
 
+  const setRowCount = useCallback((next: RowCount) => setRowCountState(next), [])
+
   const value = useMemo<DisplayContextValue>(
-    () => ({ theme: resolved, preference, setPreference, toggle, fontSize, setFontSize }),
-    [resolved, preference, setPreference, toggle, fontSize, setFontSize],
+    () => ({
+      theme: resolved,
+      preference,
+      setPreference,
+      toggle,
+      fontSize,
+      setFontSize,
+      rowCount,
+      setRowCount,
+    }),
+    [resolved, preference, setPreference, toggle, fontSize, setFontSize, rowCount, setRowCount],
   )
 
   return <DisplayContext.Provider value={value}>{children}</DisplayContext.Provider>

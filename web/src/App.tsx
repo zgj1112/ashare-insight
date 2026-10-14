@@ -10,8 +10,12 @@ import { TopControls } from './components/TopControls'
 import { WatchList } from './components/WatchList'
 import { useOverview } from './hooks/useMarket'
 import { useWatchlist } from './hooks/useWatchlist'
+import { useTheme } from './theme/ThemeProvider'
 import type { MarketStats } from './types/market'
 import './App.css'
+
+/** 与后端 GAINERS_MAX_PERCENT 保持一致，仅用于文案展示 */
+const GAINERS_MAX_PERCENT = 11
 
 const EMPTY_STATS: MarketStats = {
   total: 0,
@@ -29,7 +33,11 @@ const EMPTY_STATS: MarketStats = {
 }
 
 function App() {
-  const { data, loading, refreshing, error, lastUpdated, refresh } = useOverview(30_000)
+  const { rowCount } = useTheme()
+  const { data, loading, refreshing, error, lastUpdated, refresh } = useOverview(
+    30_000,
+    rowCount,
+  )
   const watchlist = useWatchlist(30_000)
 
   return (
@@ -55,19 +63,28 @@ function App() {
 
         <IndexBoard indices={data?.indices ?? []} loading={loading} />
 
+        <WatchList
+          quotes={watchlist.quotes}
+          loading={watchlist.loading}
+          error={watchlist.error}
+          usingDefault={watchlist.usingDefault}
+          onRemove={watchlist.remove}
+        />
+
         <FlowBoards
           inflow={data?.main_inflow ?? []}
           outflow={data?.main_outflow ?? []}
           loading={loading}
+          rowCount={rowCount}
         />
 
         <div className="content-grid">
           <RankList
             title="涨幅榜"
-            subtitle="仅显示涨幅 11% 以内的标的"
+            subtitle={`仅显示涨幅 ${GAINERS_MAX_PERCENT}% 以内的标的`}
             items={data?.top_gainers ?? []}
             loading={loading}
-            scrollRows={12}
+            rowCount={rowCount}
           />
           <RankList
             title="成交量榜"
@@ -76,22 +93,13 @@ function App() {
             loading={loading}
             displayValue={(item) => item.volume_fmt}
             valueLabel="成交量"
-            scrollRows={12}
+            rowCount={rowCount}
           />
         </div>
 
         <div className="content-grid">
-          <div className="stack">
-            <MarketBreadth stats={data?.stats ?? EMPTY_STATS} loading={loading} />
-            <MarketMetrics stats={data?.stats ?? EMPTY_STATS} loading={loading} />
-          </div>
-          <WatchList
-            quotes={watchlist.quotes}
-            loading={watchlist.loading}
-            error={watchlist.error}
-            usingDefault={watchlist.usingDefault}
-            onRemove={watchlist.remove}
-          />
+          <MarketBreadth stats={data?.stats ?? EMPTY_STATS} loading={loading} />
+          <MarketMetrics stats={data?.stats ?? EMPTY_STATS} loading={loading} />
         </div>
       </main>
 
