@@ -1,0 +1,14 @@
+{
+  "name": "ashare-insight",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A 股行情数据项目：FastAPI 后端 + React/Vite 前端",
+  "scripts": {
+    "dev": "python dev.py",
+    "dev:api": "python dev.py --backend",
+    "dev:web": "python dev.py --web",
+    "build": "cd web && npm run build",
+    "install:api": "python backend/tools/bootstrap_deps.py",
+    "install:web": "cd web && npm install"
+  }
+}

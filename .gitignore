@@ -1,0 +1,16 @@
+# 依赖与构建产物
+node_modules/
+dist/
+.venv/
+__pycache__/
+*.py[cod]
+
+# 运行期数据与临时目录
+data/
+.tmp/
+.npm-cache/
+
+# 编辑器
+.idea/
+.vscode/
+*.log

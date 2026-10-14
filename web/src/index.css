@@ -1,0 +1,98 @@
+/** 全局主题与基础样式。深色行情终端风格：涨红跌绿。 */
+
+:root {
+  --bg: #0b0f17;
+  --bg-soft: #121826;
+  --panel: #141b2b;
+  --panel-soft: #182033;
+  --border: #22304a;
+  --border-soft: #1b2537;
+
+  --text: #e6ebf5;
+  --text-dim: #8b98b0;
+  --text-faint: #5f6c85;
+
+  /* A 股习惯：涨红跌绿 */
+  --up: #f5455c;
+  --up-soft: rgba(245, 69, 92, 0.14);
+  --down: #16b979;
+  --down-soft: rgba(22, 185, 121, 0.14);
+  --flat: #8b98b0;
+  --flat-soft: rgba(139, 152, 176, 0.14);
+  --accent: #4c8dff;
+  --accent-soft: rgba(76, 141, 255, 0.14);
+
+  --radius: 12px;
+  --radius-sm: 8px;
+
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Microsoft YaHei', 'Hiragino Sans GB', Roboto, sans-serif;
+  --mono: 'SF Mono', ui-monospace, Consolas, 'Cascadia Mono', monospace;
+
+  color-scheme: dark;
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background:
+    radial-gradient(1100px 520px at 12% -8%, rgba(76, 141, 255, 0.1), transparent 60%),
+    radial-gradient(900px 460px at 92% -12%, rgba(245, 69, 92, 0.08), transparent 60%),
+    var(--bg);
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+input {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* 数字统一等宽字体，便于纵向比对 */
+.num,
+.price,
+.percent {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2a3550;
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
