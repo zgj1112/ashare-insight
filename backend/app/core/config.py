@@ -32,6 +32,15 @@ DEFAULT_WATCHLIST = ["sh600519", "sz300750"]
 # 自选股数量上限，避免单次批量行情请求过大
 WATCHLIST_MAX = 60
 
+# 涨幅榜上限：超过该涨跌幅的标的（如 20cm 涨停）不纳入榜单
+GAINERS_MAX_PERCENT = 11.0
+
+# 榜单一次取多少条（取多一些以便过滤后仍有足够展示数量）
+RANK_FETCH_SIZE = 60
+
+# 资金流榜需要过滤掉的非个股代码前缀（ETF / 基金 / 债券 / 回购）
+FUND_FLOW_EXCLUDE_PREFIXES = ("51", "56", "58", "15", "16", "11", "12", "13", "18")
+
 # 全市场快照并发线程数
 SNAPSHOT_WORKERS = int(os.getenv("ASHARE_SNAPSHOT_WORKERS", "8"))
 

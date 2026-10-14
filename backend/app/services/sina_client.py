@@ -16,6 +16,7 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
 from app.core.config import (
+    FUND_FLOW_EXCLUDE_PREFIXES,
     PAGE_SIZE,
     REQUEST_RETRIES,
     REQUEST_TIMEOUT,
@@ -47,6 +48,11 @@ SINA_LIST_URL = (
 SINA_COUNT_URL = (
     "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/"
     "Market_Center.getHQNodeStockCount"
+)
+# 资金流排行（主力大单净额等），字段为 r0_*（超大单）、r3_*（大单）
+SINA_FUND_FLOW_URL = (
+    "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/"
+    "MoneyFlow.ssl_bkzj_ssggzj"
 )
 
 QUOTE_HEADERS = {
@@ -238,6 +244,71 @@ class SinaClient:
         url = f"{SINA_COUNT_URL}?node={node}"
         text = self._request(url, LIST_HEADERS, "gbk").strip().strip('"')
         return int(to_float(text, 0))
+
+    def fetch_fund_flow_rank(
+        self,
+        sort: str = "r0_net",
+        ascending: bool = False,
+        limit: int = 20,
+        stocks_only: bool = True,
+    ) -> list[dict]:
+        """主力资金流向排行。
+
+        数据源字段含义：
+          r0_net / r0_in / r0_out 超大单（主力）净额/流入/流出，单位元
+          r0_ratio                主力净额占成交额比例（小数，如 0.346 = 34.6%）
+          netamount / ratioamount 全部资金（含中小单）的净额与占比
+        """
+        params = {
+            "page": 1,
+            "num": max(limit * 4, 100) if stocks_only else limit,
+            "sort": sort,
+            "asc": 0 if not ascending else 1,
+            "bankuai": "",
+            "shichang": "",
+        }
+        url = f"{SINA_FUND_FLOW_URL}?{urllib.parse.urlencode(params)}"
+        text = self._request(url, LIST_HEADERS, "gbk").strip()
+        if text in ("", "null", "[]"):
+            return []
+        try:
+            rows = json.loads(text)
+        except json.JSONDecodeError as exc:
+            raise SinaClientError(f"资金流数据解析失败: {exc}") from exc
+        if not isinstance(rows, list):
+            return []
+
+        converted = [self._convert_flow_row(row) for row in rows if isinstance(row, dict)]
+        if stocks_only:
+            converted = [row for row in converted if row["is_stock"]]
+        return converted[:limit]
+
+    @staticmethod
+    def _convert_flow_row(row: dict) -> dict:
+        """把资金流行转成统一字典。"""
+        symbol = str(row.get("symbol") or "").strip().lower()
+        digits = "".join(ch for ch in symbol if ch.isdigit())
+        exchange = exchange_of(symbol)
+        main_net = to_float(row.get("r0_net"))
+        amount = to_float(row.get("amount"))
+        # 净占比优先用接口返回的 r0_ratio，缺失时按 净额/成交额 估算
+        ratio = to_float(row.get("r0_ratio"), default=float("nan"))
+        if ratio != ratio:
+            ratio = main_net / amount if amount else 0.0
+        return {
+            "code": f"{exchange}{digits}",
+            "symbol": digits,
+            "name": str(row.get("name") or "").strip(),
+            "exchange": exchange,
+            "board": board_of(f"{exchange}{digits}"),
+            "price": to_float(row.get("trade")),
+            "change_percent": to_float(row.get("changeratio")) * 100,
+            "amount": amount,
+            "main_net_inflow": main_net,
+            "main_net_ratio": ratio * 100,
+            "retail_net_inflow": to_float(row.get("netamount")) - main_net,
+            "is_stock": not digits.startswith(FUND_FLOW_EXCLUDE_PREFIXES),
+        }
 
     def fetch_all(self, node: str = "hs_a") -> list[dict]:
         """并发抓取全市场快照（约 5600 只，2 秒左右）。"""

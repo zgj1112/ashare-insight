@@ -555,6 +555,59 @@
   background: var(--flat-soft);
 }
 
+/* ----------------------------------------------------------- 主力资金榜 */
+.badge-strong {
+  color: var(--up);
+  background: var(--up-soft);
+}
+
+.flow-grid {
+  align-items: stretch;
+}
+
+.flow-scroll {
+  max-height: 30rem;
+  overflow-y: auto;
+}
+
+.flow-table .col-net,
+.flow-table .col-ratio {
+  font-family: var(--mono);
+  white-space: nowrap;
+}
+
+.flow-table .col-net {
+  width: 116px;
+  font-weight: 600;
+}
+
+.flow-table .col-ratio {
+  width: 96px;
+}
+
+/* 净额/净占比的正负用方向色，而不是涨跌色，避免误读 */
+.net-in {
+  color: var(--up);
+}
+
+.net-out {
+  color: var(--down);
+}
+
+/* 榜单限高滚动（行数较多时，表头保持可见） */
+.list-scroll {
+  max-height: 30rem;
+  overflow-y: auto;
+}
+
+.flow-scroll .rank-table thead th,
+.list-scroll .rank-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--panel);
+}
+
 /* -------------------------------------------------------------- 自选列表 */
 .watchlist .panel-head h2 {
   display: flex;

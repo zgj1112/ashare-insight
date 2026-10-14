@@ -1,6 +1,7 @@
 /** 行情总览看板首页。 */
 
 import { AppHeader } from './components/AppHeader'
+import { FlowBoards } from './components/FlowList'
 import { IndexBoard } from './components/IndexBoard'
 import { MarketBreadth } from './components/MarketBreadth'
 import { MarketMetrics } from './components/MarketMetrics'
@@ -54,26 +55,28 @@ function App() {
 
         <IndexBoard indices={data?.indices ?? []} loading={loading} />
 
-        <WatchList
-          quotes={watchlist.quotes}
-          loading={watchlist.loading}
-          error={watchlist.error}
-          usingDefault={watchlist.usingDefault}
-          onRemove={watchlist.remove}
+        <FlowBoards
+          inflow={data?.main_inflow ?? []}
+          outflow={data?.main_outflow ?? []}
+          loading={loading}
         />
 
         <div className="content-grid">
           <RankList
             title="涨幅榜"
-            subtitle="按涨跌幅降序"
+            subtitle="仅显示涨幅 11% 以内的标的"
             items={data?.top_gainers ?? []}
             loading={loading}
+            scrollRows={12}
           />
           <RankList
-            title="跌幅榜"
-            subtitle="按涨跌幅升序"
-            items={data?.top_losers ?? []}
+            title="成交量榜"
+            subtitle="按成交量降序"
+            items={data?.top_volume ?? []}
             loading={loading}
+            displayValue={(item) => item.volume_fmt}
+            valueLabel="成交量"
+            scrollRows={12}
           />
         </div>
 
@@ -82,13 +85,12 @@ function App() {
             <MarketBreadth stats={data?.stats ?? EMPTY_STATS} loading={loading} />
             <MarketMetrics stats={data?.stats ?? EMPTY_STATS} loading={loading} />
           </div>
-          <RankList
-            title="成交额榜"
-            subtitle="按成交金额降序"
-            items={data?.top_turnover ?? []}
-            loading={loading}
-            displayValue={(item) => (item.turnover_rate ? `${item.turnover_rate}%` : '--')}
-            valueLabel="换手率"
+          <WatchList
+            quotes={watchlist.quotes}
+            loading={watchlist.loading}
+            error={watchlist.error}
+            usingDefault={watchlist.usingDefault}
+            onRemove={watchlist.remove}
           />
         </div>
       </main>

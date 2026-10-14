@@ -11,6 +11,8 @@ from statistics import median
 from app.core.cache import TTLCache
 from app.core.config import (
     DEFAULT_WATCHLIST,
+    GAINERS_MAX_PERCENT,
+    RANK_FETCH_SIZE,
     TTL_INDEX_QUOTE,
     TTL_RANK,
     TTL_SNAPSHOT,
@@ -20,6 +22,7 @@ from app.core.config import (
 )
 from app.core.utils import CN_TZ, format_amount, limit_prices, market_state
 from app.models.market import (
+    FlowItem,
     IndexCard,
     KlineResponse,
     MarketOverview,
@@ -132,22 +135,69 @@ def _warm_stock_index() -> None:
         _stock_index_warming = False
 
 
-def _rank(sort_by: str, order: str, limit: int, exclude_suspended: bool = True) -> list[dict]:
-    """取榜单（内部统一入口，带缓存）。"""
+def _rank(
+    sort_by: str,
+    order: str,
+    limit: int,
+    exclude_suspended: bool = True,
+    max_change_percent: float | None = None,
+) -> list[dict]:
+    """取榜单（内部统一入口，带缓存）。
+
+    max_change_percent 用于过滤掉涨幅过高的标的（例如只看 11% 以内的涨幅榜），
+    因为榜单里这类标的占比可能较高，抓取时先多取一些再过滤。
+    """
+    widen = 3 if max_change_percent is not None else 2
 
     def load() -> list[dict]:
-        rows = client.fetch_rank(sort_by=sort_by, order=order, limit=limit * 2 if exclude_suspended else limit)
+        rows = client.fetch_rank(
+            sort_by=sort_by,
+            order=order,
+            limit=limit * widen if exclude_suspended else limit,
+        )
         if exclude_suspended:
             rows = [row for row in rows if not row.get("is_suspended") and row.get("price", 0) > 0]
+        if max_change_percent is not None:
+            rows = [row for row in rows if row.get("change_percent", 0.0) <= max_change_percent]
         return rows[:limit]
 
-    cache_key = f"{sort_by}|{order}|{limit}|{exclude_suspended}"
+    cache_key = f"{sort_by}|{order}|{limit}|{exclude_suspended}|{max_change_percent}"
     store = _rank_cache.get_or_load(lambda: {})
     if cache_key in store:
         return store[cache_key]
     value = load()
     store[cache_key] = value
     return value
+
+
+def _to_flow_item(raw: dict) -> FlowItem:
+    """把资金流行转成 FlowItem（复用 Quote 的展示字段生成逻辑）。"""
+    item = FlowItem(**build_display_fields(raw))
+    main_net = raw.get("main_net_inflow") or 0.0
+    ratio = raw.get("main_net_ratio") or 0.0
+    item.main_net_inflow = round(main_net, 2)
+    item.main_net_ratio = round(ratio, 2)
+    item.retail_net_inflow = round(raw.get("retail_net_inflow") or 0.0, 2)
+    item.main_net_fmt = format_amount(main_net)
+    item.main_net_ratio_fmt = f"{ratio:+.2f}%"
+    return item
+
+
+def _rank_main_inflow(limit: int = 10, order: str = "desc") -> list[dict]:
+    """主力资金榜（order=desc 净流入榜 / asc 净流出榜，仅个股）。
+
+    排序必须交给数据源完成：只有降序的前若干条里全都是净流入，
+    本地排序无法得到净流出榜。
+    """
+    cache_key = f"main_flow|{order}|{limit}"
+    store = _rank_cache.get_or_load(lambda: {})
+    if cache_key in store:
+        return store[cache_key]
+    rows = client.fetch_fund_flow_rank(
+        sort="r0_net", ascending=order == "asc", limit=limit
+    )
+    store[cache_key] = rows
+    return rows
 
 
 def compute_stats(rows: list[dict]) -> MarketStats:
@@ -191,15 +241,27 @@ def compute_stats(rows: list[dict]) -> MarketStats:
 
 
 def get_overview() -> MarketOverview:
-    """总览看板聚合数据：指数 + 统计 + 三个榜单，并发拉取。"""
-    with ThreadPoolExecutor(max_workers=4) as pool:
+    """总览看板聚合数据：指数 + 统计 + 榜单，并发拉取。
+
+    首页当前展示：主力净流入榜（最优先）、涨幅榜（11% 以内）、成交量榜。
+    top_losers / top_turnover 仍保留在响应里，供其他页面或后续扩展使用。
+    """
+    with ThreadPoolExecutor(max_workers=6) as pool:
         future_indices = pool.submit(get_indices)
-        future_gainers = pool.submit(_rank, "change_percent", "desc", 10)
+        future_inflow = pool.submit(_rank_main_inflow, 10, "desc")
+        future_outflow = pool.submit(_rank_main_inflow, 10, "asc")
+        future_gainers = pool.submit(
+            _rank, "change_percent", "desc", 10, True, GAINERS_MAX_PERCENT
+        )
+        future_volume = pool.submit(_rank, "volume", "desc", 10)
         future_losers = pool.submit(_rank, "change_percent", "asc", 10)
         future_turnover = pool.submit(_rank, "amount", "desc", 10)
 
         indices = future_indices.result()
+        inflow = future_inflow.result()
+        outflow = future_outflow.result()
         gainers = future_gainers.result()
+        volume_top = future_volume.result()
         losers = future_losers.result()
         turnover = future_turnover.result()
 
@@ -219,19 +281,35 @@ def get_overview() -> MarketOverview:
         data_age_seconds=round(_snapshot_cache.age, 1),
         indices=indices,
         stats=stats,
+        main_inflow=[_to_flow_item(row) for row in inflow],
+        main_outflow=[_to_flow_item(row) for row in outflow],
         top_gainers=[_to_quote(row) for row in gainers],
+        top_volume=[_to_quote(row) for row in volume_top],
         top_losers=[_to_quote(row) for row in losers],
         top_turnover=[_to_quote(row) for row in turnover],
     )
 
 
 def get_rank_response(sort_by: str = "change_percent", order: str = "desc", limit: int = 20) -> RankResponse:
+    if sort_by == "main_net_inflow":
+        rows = _rank_main_inflow(limit=limit, order=order)
+        return RankResponse(
+            sort_by=sort_by,
+            order=order,
+            items=[_to_quote(row) for row in rows],  # type: ignore[list-item]
+        )
     rows = _rank(sort_by, order, limit)
     return RankResponse(
         sort_by=sort_by,
         order=order,
         items=[_to_quote(row) for row in rows],
     )
+
+
+def get_fund_flow_rank(order: str = "desc", limit: int = 20) -> list[FlowItem]:
+    """资金流榜接口：默认按主力净额降序（净流入），order=asc 时为净流出。"""
+    rows = _rank_main_inflow(limit=limit, order=order)
+    return [_to_flow_item(row) for row in rows]
 
 
 def get_quote(code: str) -> Quote | None:

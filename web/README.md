@@ -34,8 +34,9 @@ src/
 │  ├─ ThemeToggle.tsx         明/暗主题切换按钮
 │  ├─ FontScaleToggle.tsx     字体档位（小/中/大）切换
 │  ├─ IndexBoard.tsx          指数卡片
+│  ├─ FlowList.tsx            主力净流入榜 / 净流出榜（FlowBoards）
 │  ├─ WatchList.tsx           我的自选（超过限高内部滚动，表头吸顶）
-│  ├─ RankList.tsx            榜单表格（涨幅/跌幅/成交额共用）
+│  ├─ RankList.tsx            榜单表格（涨幅/成交量等共用，支持限高滚动）
 │  ├─ MarketBreadth.tsx       涨跌家数与涨跌停统计
 │  └─ MarketMetrics.tsx       平均/中位涨跌幅等市场概览
 ├─ types/market.ts            与后端 app/models/market.py 对应的类型

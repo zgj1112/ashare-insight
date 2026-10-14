@@ -11,10 +11,21 @@ interface Props {
   /** 右侧数值列，默认展示成交额 */
   displayValue?: (item: Quote) => string
   valueLabel?: string
+  /** 行数较多时限高滚动（如 20 条的主力榜） */
+  scrollRows?: number
 }
 
-export function RankList({ title, subtitle, items, loading, displayValue, valueLabel = '成交额' }: Props) {
+export function RankList({
+  title,
+  subtitle,
+  items,
+  loading,
+  displayValue,
+  valueLabel = '成交额',
+  scrollRows,
+}: Props) {
   const renderValue = displayValue ?? ((item: Quote) => item.amount_fmt)
+  const skeletonCount = scrollRows ?? 8
 
   return (
     <section className="panel">
@@ -26,41 +37,43 @@ export function RankList({ title, subtitle, items, loading, displayValue, valueL
         <span className="panel-count">{loading ? '…' : `${items.length} 条`}</span>
       </header>
 
-      <table className="rank-table">
-        <thead>
-          <tr>
-            <th className="col-rank">#</th>
-            <th className="col-name">名称</th>
-            <th className="col-price">最新价</th>
-            <th className="col-percent">涨跌幅</th>
-            <th className="col-value">{valueLabel}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {loading && items.length === 0
-            ? Array.from({ length: 8 }, (_, index) => (
-                <tr key={index} className="skeleton-row">
-                  <td colSpan={5}>
-                    <div className="skeleton-line w100" />
-                  </td>
-                </tr>
-              ))
-            : items.map((item, index) => (
-                <tr key={item.code}>
-                  <td className="col-rank">{index + 1}</td>
-                  <td className="col-name">
-                    <span className="stock-name">{item.name}</span>
-                    <span className="stock-code">{plainCode(item.code)}</span>
-                  </td>
-                  <td className={`col-price ${trendClass(item.change_percent)}`}>{item.price_fmt}</td>
-                  <td className="col-percent">
-                    <span className={`pill ${trendClass(item.change_percent)}`}>{item.percent_fmt}</span>
-                  </td>
-                  <td className="col-value">{renderValue(item)}</td>
-                </tr>
-              ))}
-        </tbody>
-      </table>
+      <div className={scrollRows ? 'list-scroll' : undefined}>
+        <table className="rank-table">
+          <thead>
+            <tr>
+              <th className="col-rank">#</th>
+              <th className="col-name">名称</th>
+              <th className="col-price">最新价</th>
+              <th className="col-percent">涨跌幅</th>
+              <th className="col-value">{valueLabel}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading && items.length === 0
+              ? Array.from({ length: skeletonCount }, (_, index) => (
+                  <tr key={index} className="skeleton-row">
+                    <td colSpan={5}>
+                      <div className="skeleton-line w100" />
+                    </td>
+                  </tr>
+                ))
+              : items.map((item, index) => (
+                  <tr key={item.code}>
+                    <td className="col-rank">{index + 1}</td>
+                    <td className="col-name">
+                      <span className="stock-name">{item.name}</span>
+                      <span className="stock-code">{plainCode(item.code)}</span>
+                    </td>
+                    <td className={`col-price ${trendClass(item.change_percent)}`}>{item.price_fmt}</td>
+                    <td className="col-percent">
+                      <span className={`pill ${trendClass(item.change_percent)}`}>{item.percent_fmt}</span>
+                    </td>
+                    <td className="col-value">{renderValue(item)}</td>
+                  </tr>
+                ))}
+          </tbody>
+        </table>
+      </div>
     </section>
   )
 }

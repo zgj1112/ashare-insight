@@ -86,7 +86,14 @@ class MarketOverview(BaseModel):
 
     indices: list[IndexCard] = Field(default_factory=list)
     stats: MarketStats = Field(default_factory=MarketStats)
+    # 主力净流入榜（首页最优先展示）
+    main_inflow: list[FlowItem] = Field(default_factory=list)
+    # 主力净流出榜（与净流入榜对称展示）
+    main_outflow: list[FlowItem] = Field(default_factory=list)
+    # 涨幅榜：已过滤掉涨幅超过阈值的标的
     top_gainers: list[Quote] = Field(default_factory=list)
+    # 成交量榜
+    top_volume: list[Quote] = Field(default_factory=list)
     top_losers: list[Quote] = Field(default_factory=list)
     top_turnover: list[Quote] = Field(default_factory=list)
 
@@ -113,6 +120,16 @@ class KlineResponse(BaseModel):
 
 class RankItem(Quote):
     pass
+
+
+class FlowItem(Quote):
+    """资金流榜条目，附带主力资金数据。"""
+
+    main_net_inflow: float = Field(default=0.0, description="主力净流入（元），负数为净流出")
+    main_net_ratio: float = Field(default=0.0, description="主力净额占成交额比例 %")
+    retail_net_inflow: float = Field(default=0.0, description="非主力（中小单）净额，元")
+    main_net_fmt: str = ""
+    main_net_ratio_fmt: str = ""
 
 
 class RankResponse(BaseModel):

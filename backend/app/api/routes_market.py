@@ -5,6 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, Query
 
 from app.models.market import (
+    FlowItem,
     KlineResponse,
     MarketOverview,
     Quote,
@@ -53,6 +54,14 @@ def quote(code: str) -> Quote:
     if result is None:
         raise HTTPException(status_code=404, detail=f"未找到标的: {code}")
     return result
+
+
+@router.get("/fund-flow", response_model=list[FlowItem], summary="主力资金净流入榜")
+def fund_flow(
+    order: str = Query("desc", pattern="^(asc|desc)$", description="desc 为净流入榜，asc 为净流出榜"),
+    limit: int = Query(20, ge=1, le=50),
+) -> list[FlowItem]:
+    return market_service.get_fund_flow_rank(order=order, limit=limit)
 
 
 @router.get("/quotes", response_model=list[Quote], summary="批量行情（自选列表用）")

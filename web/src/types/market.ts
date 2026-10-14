@@ -42,6 +42,17 @@ export interface IndexCard extends Quote {
   low_fmt: string
 }
 
+export interface FlowItem extends Quote {
+  /** 主力净流入（元），负数为净流出 */
+  main_net_inflow: number
+  /** 主力净额占成交额比例 % */
+  main_net_ratio: number
+  /** 非主力（中小单）净额，元 */
+  retail_net_inflow: number
+  main_net_fmt: string
+  main_net_ratio_fmt: string
+}
+
 export interface MarketStats {
   total: number
   up: number
@@ -67,7 +78,14 @@ export interface MarketOverview {
 
   indices: IndexCard[]
   stats: MarketStats
+  /** 主力净流入榜（首页最优先展示） */
+  main_inflow: FlowItem[]
+  /** 主力净流出榜 */
+  main_outflow: FlowItem[]
+  /** 涨幅榜：已按 11% 上限过滤 */
   top_gainers: Quote[]
+  /** 成交量榜 */
+  top_volume: Quote[]
   top_losers: Quote[]
   top_turnover: Quote[]
 }
