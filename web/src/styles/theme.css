@@ -125,12 +125,33 @@
   --radius: 12px;
   --radius-sm: 8px;
 
+  /* 根字号由「小/中/大」档位决定，页面内所有字号都用 rem，切换即整体缩放 */
+  --font-size-root: 14px;
+
   --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
     'Microsoft YaHei', 'Hiragino Sans GB', Roboto, sans-serif;
   --mono: 'SF Mono', ui-monospace, Consolas, 'Cascadia Mono', monospace;
+}
 
+/* ------------------------------------------------------------ 字体档位 */
+:root[data-font='small'] {
+  --font-size-root: 13px;
+}
+
+:root[data-font='medium'] {
+  --font-size-root: 14px;
+}
+
+:root[data-font='large'] {
+  --font-size-root: 16px;
+}
+
+html {
+  font-size: var(--font-size-root);
+}
+
+:root {
   font-family: var(--sans);
-  font-size: 14px;
   line-height: 1.5;
   color: var(--text);
   background: var(--bg);

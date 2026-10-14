@@ -26,15 +26,17 @@
 6. **成交额榜**：成交金额前 10 名，附换手率
 7. **搜索**：支持 6 位代码（`600519`）或中文名称（`茅台`）实时检索，结果可直接「+ 自选」
 
-顶部显示交易状态（交易中/午间休市/已收盘）、数据时间与主题切换按钮，页面与自选列表均每 30 秒自动刷新，也可手动刷新。
+顶部显示交易状态（交易中/午间休市/已收盘）、数据时间与刷新按钮；页面底部集中放置显示设置：**字体档位（小/中/大）** 与 **主题（浅色/深色）**。页面与自选列表均每 30 秒自动刷新，也可手动刷新。
 
-### 主题（明/暗）
+### 显示设置（字体与主题）
 
-- 右上角按钮一键切换深色 / 浅色，选择记录在 `localStorage`（键：`ashare-insight:theme`），刷新与重启后保持
-- **颜色全部走 CSS 变量**，定义集中在 `web/src/styles/theme.css`，各页面样式只引用变量，新增页面无需写两套配色
-- 变量约定：`--bg / --panel / --border / --text*` 控制层级，`--up / --down / --flat` 控制涨跌平，`--accent` 为主色；另有 `--shadow-panel`、`--skeleton-*`、`--zebra` 等
-- 涨跌色按主题分别取值：深色 `#f5455c / #16b979`，浅色 `#d92038 / #0a9d5f`，两种背景下都保持辨识度
-- 首屏由 `web/public/theme-init.js` 在样式表之前写 `<html data-theme>`，避免「先深后浅」的闪烁
+- **字体**：小 / 中 / 大三档，点一下立即生效；根字号 13 / 14 / 16 px，页面所有字号都用 `rem`，因此整体等比缩放
+- **主题**：浅色 / 深色一键切换，两种背景下涨红跌绿都保持辨识度
+- 两者都记录在 `localStorage`（键：`ashare-insight:font`、`ashare-insight:theme`），刷新与重启后保持
+- **颜色与字号全部走 CSS 变量**，定义集中在 `web/src/styles/theme.css`，新增页面只引用变量即可自动适配两套主题与三档字号
+- 变量约定：`--bg / --panel / --border / --text*` 控制层级，`--up / --down / --flat` 控制涨跌平，`--accent` 为主色，`--font-size-root` 为根字号；另有 `--shadow-panel`、`--skeleton-*`、`--zebra` 等
+- 涨跌色按主题分别取值：深色 `#f5455c / #16b979`，浅色 `#d92038 / #0a9d5f`
+- 首屏由 `web/public/theme-init.js` 在样式表之前写 `<html data-theme data-font>`，避免主题与字号闪烁
 - 已预留「跟随系统」：`useTheme().setPreference('system')` 即跟随系统配色并监听变化，需要时在界面上暴露入口即可
 
 ### 自选列表说明
@@ -111,10 +113,10 @@ ashare-insight/
       ├─ App.tsx                # 看板页面组装
       ├─ api/market.ts          # 接口封装
       ├─ hooks/                 # useMarket（总览/搜索）、useWatchlist（自选）
-      ├─ theme/                 # ThemeProvider、useTheme、明暗类型与读写
-      ├─ styles/theme.css       # 全局 CSS 变量（明/暗两套）与基础样式
+      ├─ theme/                 # ThemeProvider、useTheme、主题与字号档位
+      ├─ styles/theme.css       # 全局 CSS 变量（明/暗两套 + 根字号）与基础样式
       ├─ components/            # AppHeader / IndexBoard / WatchList / RankList
-      │                         # MarketBreadth / MarketMetrics / ThemeToggle
+      │                         # MarketBreadth / MarketMetrics / ThemeToggle / FontScaleToggle
       ├─ types/market.ts        # 与后端模型对应的类型
       └─ utils/format.ts        # 涨跌配色、时间与代码格式化
 ```
@@ -150,6 +152,7 @@ ashare-insight/
 - [ ] 自选股分组、拖拽排序与到价提醒
 - [ ] 榜单行点击跳转个股详情，支持板块/市场筛选
 - [ ] 在界面上暴露「跟随系统」主题选项
+- [ ] 显示设置改为可折叠面板，支持自定义字号
 - [ ] 多数据源自动切换与降级（东方财富为主、新浪/腾讯备用）
 - [ ] 数据落盘（SQLite / Parquet）与历史行情批量回补
 

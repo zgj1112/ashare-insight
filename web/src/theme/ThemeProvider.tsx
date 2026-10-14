@@ -1,4 +1,4 @@
-/** 全局主题上下文：明/暗切换，带本地持久化与跟随系统。 */
+/** 全局显示偏好：明暗主题 + 字体大小。 */
 
 import {
   createContext,
@@ -10,6 +10,12 @@ import {
   type ReactNode,
 } from 'react'
 import {
+  applyFontSize,
+  readFontSize,
+  writeFontSize,
+  type FontSize,
+} from './font'
+import {
   applyTheme,
   readPreference,
   resolveTheme,
@@ -19,7 +25,7 @@ import {
   type ThemePreference,
 } from './theme'
 
-interface ThemeContextValue {
+interface DisplayContextValue {
   /** 当前生效的主题 */
   theme: Theme
   /** 用户选择：light / dark / system */
@@ -27,9 +33,12 @@ interface ThemeContextValue {
   setPreference: (preference: ThemePreference) => void
   /** 在浅色与深色之间切换（会覆盖「跟随系统」） */
   toggle: () => void
+  /** 当前字体档位 */
+  fontSize: FontSize
+  setFontSize: (size: FontSize) => void
 }
 
-const ThemeContext = createContext<ThemeContextValue | null>(null)
+const DisplayContext = createContext<DisplayContextValue | null>(null)
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [preference, setPreferenceState] = useState<ThemePreference>(() =>
@@ -37,6 +46,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   )
   const [resolved, setResolved] = useState<Theme>(() =>
     typeof window === 'undefined' ? 'dark' : resolveTheme(readPreference()),
+  )
+  const [fontSize, setFontSizeState] = useState<FontSize>(() =>
+    typeof window === 'undefined' ? 'medium' : readFontSize(),
   )
 
   // 偏好变化时同步到 DOM 与本地存储
@@ -46,6 +58,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     applyTheme(theme)
     writePreference(preference)
   }, [preference])
+
+  useEffect(() => {
+    applyFontSize(fontSize)
+    writeFontSize(fontSize)
+  }, [fontSize])
 
   // 跟随系统时，监听系统配色变化
   useEffect(() => {
@@ -66,17 +83,19 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setPreferenceState((current) => (resolveTheme(current) === 'dark' ? 'light' : 'dark'))
   }, [])
 
-  const value = useMemo<ThemeContextValue>(
-    () => ({ theme: resolved, preference, setPreference, toggle }),
-    [resolved, preference, setPreference, toggle],
+  const setFontSize = useCallback((next: FontSize) => setFontSizeState(next), [])
+
+  const value = useMemo<DisplayContextValue>(
+    () => ({ theme: resolved, preference, setPreference, toggle, fontSize, setFontSize }),
+    [resolved, preference, setPreference, toggle, fontSize, setFontSize],
   )
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+  return <DisplayContext.Provider value={value}>{children}</DisplayContext.Provider>
 }
 
-/** 读取当前主题与切换方法；必须在 ThemeProvider 内使用。 */
-export function useTheme(): ThemeContextValue {
-  const context = useContext(ThemeContext)
+/** 读取主题与字体设置；必须在 ThemeProvider 内使用。 */
+export function useTheme(): DisplayContextValue {
+  const context = useContext(DisplayContext)
   if (!context) throw new Error('useTheme 必须在 ThemeProvider 内使用')
   return context
 }

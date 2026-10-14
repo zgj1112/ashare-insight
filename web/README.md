@@ -24,12 +24,14 @@ src/
 │  ├─ useMarket.ts            useOverview（自动刷新）/ useSearch（防抖搜索）
 │  └─ useWatchlist.ts         自选列表（本地持久化 + 批量行情）
 ├─ theme/
-│  ├─ ThemeProvider.tsx       ThemeProvider 与 useTheme
-│  └─ theme.ts                明暗类型、本地读写、系统偏好解析
-├─ styles/theme.css           全局 CSS 变量（明/暗两套）与基础样式
+│  ├─ ThemeProvider.tsx       ThemeProvider 与 useTheme（主题 + 字号）
+│  ├─ theme.ts                明暗类型、本地读写、系统偏好解析
+│  └─ font.ts                 字号档位（小/中/大）与根字号应用
+├─ styles/theme.css           全局 CSS 变量（明/暗两套 + 根字号）与基础样式
 ├─ components/
-│  ├─ AppHeader.tsx           品牌、交易状态、数据时间、搜索框、刷新、主题切换
+│  ├─ AppHeader.tsx           品牌、交易状态、数据时间、搜索框、刷新
 │  ├─ ThemeToggle.tsx         明/暗主题切换按钮
+│  ├─ FontScaleToggle.tsx     字体档位（小/中/大）切换
 │  ├─ IndexBoard.tsx          指数卡片
 │  ├─ WatchList.tsx           我的自选
 │  ├─ RankList.tsx            榜单表格（涨幅/跌幅/成交额共用）
@@ -39,19 +41,25 @@ src/
 └─ utils/format.ts            涨跌配色（涨红跌绿）、时间与代码格式化
 ```
 
-## 主题与配色约定
+## 主题与字号约定
 
 - **不要写死颜色**：所有色值放在 `src/styles/theme.css` 的 CSS 变量里，组件样式只引用变量，
   这样切换主题与新增页面都不需要额外工作
+- **不要写死字号**：所有字号用 `rem`，根字号由 `--font-size-root`（小 13 / 中 14 / 大 16）决定，
+  切换档位即整体等比缩放；间距与圆角保持 px，避免布局跳动
 - 变量分层：`--bg / --bg-soft / --bg-elevated`（背景）、`--panel / --panel-soft`（面板）、
   `--border / --border-soft`（描边）、`--text / --text-dim / --text-faint`（文字）、
   `--up / --up-soft / --down / --down-soft / --flat`（涨跌平）、`--accent*`（主色）、
   `--shadow-panel`、`--skeleton-a/b`、`--zebra`、`--scrollbar-thumb`
-- 切换方式：`useTheme().toggle()`（浅↔深）或 `useTheme().setPreference('system')`（跟随系统）；
-  最终主题写入 `<html data-theme="dark|light">`，CSS 变量据此生效
-- 新增主题相关表现时，优先给变量取值，而不是在组件里判断当前主题
-- 首屏防闪烁：`public/theme-init.js` 在样式表之前同步执行，读取 `localStorage` 后立即写 `data-theme`；
-  它不能参与打包，因此使用 ES5 写法，改动时需与 `src/theme/theme.ts` 的取值逻辑保持一致
+- 切换方式：`useTheme().toggle()`（浅↔深）、`useTheme().setPreference('system')`（跟随系统）、
+  `useTheme().setFontSize('small' | 'medium' | 'large')`（字号档位）；
+  最终写入 `<html data-theme data-font>`，CSS 变量据此生效
+- 常用 px→rem 换算（基准 14px）：`11px=0.7857` `11.5px=0.8214` `12px=0.8571` `12.5px=0.8929`
+  `13px=0.9286` `13.5px=0.9643` `14px=1` `14.5px=1.0357` `15px=1.0714` `16px=1.1429`
+  `17px=1.2143` `18px=1.2857` `20px=1.4286` `22px=1.5714`
+- 首屏防闪烁：`public/theme-init.js` 在样式表之前同步执行，读取 localStorage 后立即写
+  `data-theme` 与 `data-font`；它不参与打包，因此使用 ES5 写法，
+  改动时需与 `src/theme/theme.ts`、`src/theme/font.ts` 的键名和取值保持一致
 
 ## 约定
 

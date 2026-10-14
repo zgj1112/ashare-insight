@@ -39,17 +39,17 @@
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   color: #fff;
   font-weight: 700;
-  font-size: 18px;
+  font-size: 1.2857rem;
 }
 
 .brand-text h1 {
-  font-size: 17px;
+  font-size: 1.2143rem;
   font-weight: 600;
   letter-spacing: 0.3px;
 }
 
 .brand-text p {
-  font-size: 12px;
+  font-size: 0.8571rem;
   color: var(--text-faint);
 }
 
@@ -66,7 +66,7 @@
   gap: 7px;
   padding: 6px 12px;
   border-radius: 999px;
-  font-size: 12.5px;
+  font-size: 0.8929rem;
   border: 1px solid var(--border);
   background: var(--panel);
   color: var(--text-dim);
@@ -108,13 +108,13 @@
 }
 
 .updated-label {
-  font-size: 11px;
+  font-size: 0.7857rem;
   color: var(--text-faint);
 }
 
 .updated strong {
   font-family: var(--mono);
-  font-size: 13px;
+  font-size: 0.9286rem;
   font-variant-numeric: tabular-nums;
 }
 
@@ -149,7 +149,7 @@
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-faint);
-  font-size: 16px;
+  font-size: 1.1429rem;
   pointer-events: none;
 }
 
@@ -169,7 +169,7 @@
 
 .search-tip {
   padding: 12px 14px;
-  font-size: 12.5px;
+  font-size: 0.8929rem;
   color: var(--text-dim);
 }
 
@@ -214,7 +214,7 @@
 
 .search-item-code {
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: 0.8571rem;
   color: var(--text-faint);
 }
 
@@ -223,21 +223,21 @@
   flex-direction: column;
   align-items: flex-end;
   font-family: var(--mono);
-  font-size: 13px;
+  font-size: 0.9286rem;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 .search-item-price em {
   font-style: normal;
-  font-size: 11.5px;
+  font-size: 0.8214rem;
   opacity: 0.85;
 }
 
 .tag {
   padding: 1px 7px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 0.7857rem;
   color: var(--text-dim);
   background: var(--flat-soft);
   white-space: nowrap;
@@ -348,13 +348,13 @@
 }
 
 .index-name {
-  font-size: 13.5px;
+  font-size: 0.9643rem;
   font-weight: 600;
 }
 
 .index-code {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 0.7857rem;
   color: var(--text-faint);
 }
 
@@ -364,13 +364,13 @@
   justify-content: space-between;
   gap: 8px;
   font-family: var(--mono);
-  font-size: 22px;
+  font-size: 1.5714rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
 .index-percent {
-  font-size: 13px;
+  font-size: 0.9286rem;
   font-weight: 500;
 }
 
@@ -379,9 +379,10 @@
   display: flex;
   justify-content: space-between;
   gap: 6px;
-  font-size: 11.5px;
+  font-size: 0.8214rem;
   color: var(--text-dim);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .index-foot {
@@ -415,18 +416,18 @@
 }
 
 .panel-head h2 {
-  font-size: 14.5px;
+  font-size: 1.0357rem;
   font-weight: 600;
 }
 
 .panel-head p {
-  font-size: 11.5px;
+  font-size: 0.8214rem;
   color: var(--text-faint);
   margin-top: 2px;
 }
 
 .panel-count {
-  font-size: 11.5px;
+  font-size: 0.8214rem;
   color: var(--text-dim);
   padding: 3px 9px;
   border-radius: 999px;
@@ -443,7 +444,7 @@
 
 .rank-table th {
   padding: 9px 16px;
-  font-size: 11.5px;
+  font-size: 0.8214rem;
   font-weight: 500;
   color: var(--text-faint);
   text-align: right;
@@ -458,7 +459,7 @@
 
 .rank-table td {
   padding: 9px 16px;
-  font-size: 13px;
+  font-size: 0.9286rem;
   text-align: right;
   border-bottom: 1px solid var(--border-soft);
 }
@@ -493,7 +494,7 @@
 
 .stock-code {
   font-family: var(--mono);
-  font-size: 11.5px;
+  font-size: 0.8214rem;
   color: var(--text-faint);
 }
 
@@ -513,7 +514,7 @@
   padding: 2px 8px;
   border-radius: 6px;
   font-family: var(--mono);
-  font-size: 12.5px;
+  font-size: 0.8929rem;
 }
 
 .pill.trend-up {
@@ -541,7 +542,7 @@
 .badge {
   padding: 1px 8px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 0.7857rem;
   font-weight: 500;
   color: var(--accent-text);
   background: var(--accent-soft);
@@ -598,7 +599,7 @@
   border: 1px solid var(--border);
   background: transparent;
   color: var(--text-faint);
-  font-size: 15px;
+  font-size: 1.0714rem;
   line-height: 1;
 }
 
@@ -618,18 +619,18 @@
 }
 
 .watch-empty p {
-  font-size: 14px;
+  font-size: 1rem;
   color: var(--text-dim);
 }
 
 .watch-empty span {
-  font-size: 12px;
+  font-size: 0.8571rem;
   color: var(--text-faint);
 }
 
 .panel-error {
   padding: 14px 16px;
-  font-size: 12.5px;
+  font-size: 0.8929rem;
   color: var(--up-text);
   background: var(--up-soft);
 }
@@ -648,7 +649,7 @@
   border: 1px solid var(--accent-border);
   background: var(--accent-soft);
   color: var(--accent-text);
-  font-size: 12px;
+  font-size: 0.8571rem;
   white-space: nowrap;
 }
 
@@ -721,13 +722,13 @@
 }
 
 .breadth-label {
-  font-size: 11.5px;
+  font-size: 0.8214rem;
   color: var(--text-faint);
 }
 
 .breadth-cell strong {
   font-family: var(--mono);
-  font-size: 20px;
+  font-size: 1.4286rem;
   font-weight: 600;
 }
 
@@ -750,13 +751,13 @@
 }
 
 .metric-label {
-  font-size: 11.5px;
+  font-size: 0.8214rem;
   color: var(--text-faint);
 }
 
 .metric-cell strong {
   font-family: var(--mono);
-  font-size: 17px;
+  font-size: 1.2143rem;
   font-weight: 600;
 }
 
@@ -805,12 +806,65 @@
 /* ------------------------------------------------------------------ 页脚 */
 .app-footer {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
-  gap: 8px 20px;
+  gap: 12px 20px;
   padding: 16px 0 20px;
-  font-size: 11.5px;
+  font-size: 0.8214rem;
   color: var(--text-faint);
   border-top: 1px solid var(--border-soft);
+}
+
+.footer-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+
+.footer-settings {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* -------------------------------------------------------------- 字体档位 */
+.font-scale {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.font-scale-label {
+  padding: 0 8px 0 6px;
+  font-size: 0.7857rem;
+  color: var(--text-faint);
+}
+
+.font-btn {
+  min-width: 30px;
+  padding: 5px 9px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-dim);
+  line-height: 1.2;
+}
+
+.font-btn:hover {
+  color: var(--text);
+  background: var(--panel-soft);
+}
+
+.font-btn.active {
+  background: var(--accent-soft);
+  color: var(--accent-text-strong);
+  font-weight: 600;
 }
 
 /* ---------------------------------------------------------------- 响应式 */
@@ -841,7 +895,7 @@
   }
 
   .index-price {
-    font-size: 19px;
+    font-size: 1.3571rem;
   }
 
   .rank-table th,
