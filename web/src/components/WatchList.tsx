@@ -37,7 +37,8 @@ export function WatchList({ quotes, loading, error, usingDefault, onRemove }: Pr
       )}
 
       {quotes.length > 0 && (
-        <table className="rank-table watch-table">
+        <div className="watch-scroll">
+          <table className="rank-table watch-table">
           <thead>
             <tr>
               <th className="col-name">名称</th>
@@ -82,7 +83,8 @@ export function WatchList({ quotes, loading, error, usingDefault, onRemove }: Pr
               </tr>
             ))}
           </tbody>
-        </table>
+          </table>
+        </div>
       )}
     </section>
   )

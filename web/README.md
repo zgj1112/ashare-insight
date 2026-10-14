@@ -29,11 +29,12 @@ src/
 │  └─ font.ts                 字号档位（小/中/大）与根字号应用
 ├─ styles/theme.css           全局 CSS 变量（明/暗两套 + 根字号）与基础样式
 ├─ components/
-│  ├─ AppHeader.tsx           品牌、交易状态、数据时间、搜索框、刷新
+│  ├─ AppHeader.tsx           品牌、搜索框、刷新
+│  ├─ TopControls.tsx         右上角控制行：市场状态、数据时间、字体档位、主题
 │  ├─ ThemeToggle.tsx         明/暗主题切换按钮
 │  ├─ FontScaleToggle.tsx     字体档位（小/中/大）切换
 │  ├─ IndexBoard.tsx          指数卡片
-│  ├─ WatchList.tsx           我的自选
+│  ├─ WatchList.tsx           我的自选（超过限高内部滚动，表头吸顶）
 │  ├─ RankList.tsx            榜单表格（涨幅/跌幅/成交额共用）
 │  ├─ MarketBreadth.tsx       涨跌家数与涨跌停统计
 │  └─ MarketMetrics.tsx       平均/中位涨跌幅等市场概览
@@ -54,6 +55,8 @@ src/
 - 切换方式：`useTheme().toggle()`（浅↔深）、`useTheme().setPreference('system')`（跟随系统）、
   `useTheme().setFontSize('small' | 'medium' | 'large')`（字号档位）；
   最终写入 `<html data-theme data-font>`，CSS 变量据此生效
+- 显示设置的入口统一放在 `TopControls`（首页头部第二行靠右），新增页面若要复用，
+  把它挂到自己的顶部即可，状态仍由同一个 `useTheme()` 提供
 - 常用 px→rem 换算（基准 14px）：`11px=0.7857` `11.5px=0.8214` `12px=0.8571` `12.5px=0.8929`
   `13px=0.9286` `13.5px=0.9643` `14px=1` `14.5px=1.0357` `15px=1.0714` `16px=1.1429`
   `17px=1.2143` `18px=1.2857` `20px=1.4286` `22px=1.5714`

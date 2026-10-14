@@ -45,8 +45,8 @@ export function IndexBoard({ indices, loading }: Props) {
           </div>
           <div className="index-meta">
             <span>今开 {item.open ? item.open.toFixed(2) : '--'}</span>
-            <span>最高 {item.high_fmt}</span>
-            <span>最低 {item.low_fmt}</span>
+            <span>高 {item.high_fmt}</span>
+            <span>低 {item.low_fmt}</span>
           </div>
           <div className="index-foot">
             <span>成交 {item.volume_fmt}</span>

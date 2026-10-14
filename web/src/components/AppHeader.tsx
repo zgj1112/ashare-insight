@@ -1,27 +1,17 @@
-/** 顶部栏：品牌、市场状态、数据时间、刷新按钮、搜索框。 */
+/** 顶部栏：品牌、搜索框、刷新按钮（状态与显示设置见 TopControls）。 */
 
 import { useEffect, useRef, useState } from 'react'
 import { useSearch } from '../hooks/useMarket'
-import type { MarketOverview } from '../types/market'
-import { formatClock, plainCode, trendClass } from '../utils/format'
+import { plainCode, trendClass } from '../utils/format'
 
 interface Props {
-  overview: MarketOverview | null
-  lastUpdated: number | null
   refreshing: boolean
   onRefresh: () => void
   isWatched: (code: string) => boolean
   onAddWatch: (code: string) => void
 }
 
-export function AppHeader({
-  overview,
-  lastUpdated,
-  refreshing,
-  onRefresh,
-  isWatched,
-  onAddWatch,
-}: Props) {
+export function AppHeader({ refreshing, onRefresh, isWatched, onAddWatch }: Props) {
   const search = useSearch()
   const [open, setOpen] = useState(false)
   const boxRef = useRef<HTMLDivElement>(null)
@@ -35,9 +25,6 @@ export function AppHeader({
     return () => document.removeEventListener('mousedown', onPointerDown)
   }, [])
 
-  const state = overview?.market_state ?? 'closed'
-  const stateText = overview?.market_state_text ?? '加载中'
-
   return (
     <header className="app-header">
       <div className="brand">
@@ -49,16 +36,6 @@ export function AppHeader({
       </div>
 
       <div className="header-right">
-        <div className={`market-state state-${state}`}>
-          <span className="dot" />
-          {stateText}
-        </div>
-
-        <div className="updated">
-          <span className="updated-label">数据时间</span>
-          <strong>{lastUpdated ? formatClock(new Date(lastUpdated).toISOString()) : '--:--:--'}</strong>
-        </div>
-
         <div className="search" ref={boxRef}>
           <input
             value={search.keyword}

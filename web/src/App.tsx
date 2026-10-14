@@ -1,12 +1,11 @@
 /** 行情总览看板首页。 */
 
 import { AppHeader } from './components/AppHeader'
-import { FontScaleToggle } from './components/FontScaleToggle'
 import { IndexBoard } from './components/IndexBoard'
 import { MarketBreadth } from './components/MarketBreadth'
 import { MarketMetrics } from './components/MarketMetrics'
 import { RankList } from './components/RankList'
-import { ThemeToggle } from './components/ThemeToggle'
+import { TopControls } from './components/TopControls'
 import { WatchList } from './components/WatchList'
 import { useOverview } from './hooks/useMarket'
 import { useWatchlist } from './hooks/useWatchlist'
@@ -35,13 +34,13 @@ function App() {
   return (
     <div className="app">
       <AppHeader
-        overview={data}
-        lastUpdated={lastUpdated}
         refreshing={refreshing}
         onRefresh={refresh}
         isWatched={watchlist.has}
         onAddWatch={watchlist.add}
       />
+
+      <TopControls overview={data} lastUpdated={lastUpdated} />
 
       <main className="app-main">
         {error && (
@@ -95,16 +94,10 @@ function App() {
       </main>
 
       <footer className="app-footer">
-        <div className="footer-info">
-          <span>数据来源：{data?.source ?? '—'}</span>
-          <span>交易日：{data?.trade_date ?? '—'}</span>
-          <span>数据生成：{data?.as_of ?? '—'}</span>
-          <span>每 30 秒自动刷新 · 行情仅供研究参考，不构成投资建议</span>
-        </div>
-        <div className="footer-settings">
-          <FontScaleToggle />
-          <ThemeToggle />
-        </div>
+        <span>数据来源：{data?.source ?? '—'}</span>
+        <span>交易日：{data?.trade_date ?? '—'}</span>
+        <span>数据生成：{data?.as_of ?? '—'}</span>
+        <span>每 30 秒自动刷新 · 行情仅供研究参考，不构成投资建议</span>
       </footer>
     </div>
   )
