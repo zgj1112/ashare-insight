@@ -181,18 +181,17 @@
   width: 100%;
   padding: 10px 14px;
   background: transparent;
-  border: 0;
   border-bottom: 1px solid var(--border-soft);
   color: var(--text);
   text-align: left;
 }
 
-.search-item:last-child {
-  border-bottom: 0;
-}
-
 .search-item:hover {
   background: var(--panel-soft);
+}
+
+.search-item:last-child {
+  border-bottom: 0;
 }
 
 .search-item-main {
@@ -513,6 +512,141 @@
 .pill.trend-flat {
   color: var(--flat);
   background: var(--flat-soft);
+}
+
+/* -------------------------------------------------------------- 自选列表 */
+.watchlist .panel-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.watch-table .col-name {
+  width: auto;
+}
+
+.watch-table .col-price {
+  width: 110px;
+}
+
+.watch-table .col-percent {
+  width: 130px;
+}
+
+.watch-table .col-change,
+.watch-table .col-amount,
+.watch-table .col-turnover,
+.watch-table .col-amplitude {
+  font-family: var(--mono);
+  white-space: nowrap;
+}
+
+.watch-table .col-change {
+  width: 96px;
+}
+
+.watch-table .col-amount {
+  color: var(--text-dim);
+  width: 124px;
+}
+
+.watch-table .col-turnover,
+.watch-table .col-amplitude {
+  color: var(--text-dim);
+  width: 92px;
+}
+
+.watch-table .col-action {
+  width: 56px;
+  text-align: center;
+}
+
+.watch-table .tag-warn {
+  margin-left: 6px;
+}
+
+.remove-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-faint);
+  font-size: 15px;
+  line-height: 1;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.remove-btn:hover {
+  color: var(--up);
+  border-color: rgba(245, 69, 92, 0.5);
+  background: var(--up-soft);
+}
+
+.watch-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 34px 16px;
+  text-align: center;
+}
+
+.watch-empty p {
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+.watch-empty span {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.panel-error {
+  padding: 14px 16px;
+  font-size: 12.5px;
+  color: #ffb3bf;
+  background: var(--up-soft);
+}
+
+/* ------------------------------------------------------------ 搜索结果操作 */
+.search-item-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.watch-btn {
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(76, 141, 255, 0.5);
+  background: var(--accent-soft);
+  color: #9dc0ff;
+  font-size: 12px;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+
+.watch-btn:hover:not(:disabled) {
+  background: rgba(76, 141, 255, 0.28);
+  color: #cfe0ff;
+}
+
+.watch-btn.watched {
+  border-color: var(--border-soft);
+  background: transparent;
+  color: var(--text-faint);
+  cursor: default;
 }
 
 /* ------------------------------------------------------------ 市场情绪 */

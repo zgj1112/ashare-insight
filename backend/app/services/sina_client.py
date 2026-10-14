@@ -98,8 +98,12 @@ class SinaClient:
         raise SinaClientError(f"请求失败: {url} ({last_error})")
 
     # ------------------------------------------------------------ 行情快照
-    def fetch_quotes(self, codes: list[str]) -> list[dict]:
-        """批量取实时行情，单次建议不超过 200 个代码。"""
+    def fetch_quotes(self, codes: list[str], list_fields: dict[str, dict] | None = None) -> list[dict]:
+        """批量取实时行情，单次建议不超过 200 个代码。
+
+        list_fields 为「代码 -> 列表接口行数据」的映射，用于补齐换手率、市值等
+        快照接口不提供的字段（由上层维护全市场清单后传入）。
+        """
         cleaned = [code.strip().lower() for code in codes if code.strip()]
         if not cleaned:
             return []
@@ -111,7 +115,20 @@ class SinaClient:
             results.extend(
                 build_display_fields(raw) for raw in self._parse_quote_payload(text)
             )
+        if list_fields:
+            self._merge_list_fields(results, list_fields)
         return results
+
+    @staticmethod
+    def _merge_list_fields(quotes: list[dict], list_fields: dict[str, dict]) -> None:
+        """用列表接口的数据补齐快照缺失字段，仅在原值为空时覆盖。"""
+        for quote in quotes:
+            extra = list_fields.get(quote["code"])
+            if not extra:
+                continue
+            for field in ("turnover_rate", "pe", "pb", "market_cap", "float_cap"):
+                if quote.get(field) is None and extra.get(field) is not None:
+                    quote[field] = extra[field]
 
     @staticmethod
     def _parse_quote_payload(text: str) -> list[dict]:

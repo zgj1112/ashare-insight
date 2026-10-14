@@ -10,9 +10,18 @@ interface Props {
   lastUpdated: number | null
   refreshing: boolean
   onRefresh: () => void
+  isWatched: (code: string) => boolean
+  onAddWatch: (code: string) => void
 }
 
-export function AppHeader({ overview, lastUpdated, refreshing, onRefresh }: Props) {
+export function AppHeader({
+  overview,
+  lastUpdated,
+  refreshing,
+  onRefresh,
+  isWatched,
+  onAddWatch,
+}: Props) {
   const search = useSearch()
   const [open, setOpen] = useState(false)
   const boxRef = useRef<HTMLDivElement>(null)
@@ -35,7 +44,7 @@ export function AppHeader({ overview, lastUpdated, refreshing, onRefresh }: Prop
         <span className="brand-mark">A</span>
         <div className="brand-text">
           <h1>A 股行情看板</h1>
-          <p>实时行情 · 涨跌统计 · 龙虎榜单</p>
+          <p>实时行情 · 涨跌统计 · 自选盯盘</p>
         </div>
       </div>
 
@@ -70,28 +79,37 @@ export function AppHeader({ overview, lastUpdated, refreshing, onRefresh }: Prop
               {!search.searching && !search.error && search.results.length === 0 && (
                 <div className="search-tip">未找到匹配的标的</div>
               )}
-              {search.results.map((item) => (
-                <button
-                  key={item.code}
-                  type="button"
-                  className="search-item"
-                  onClick={() => {
-                    search.setKeyword(item.name)
-                    setOpen(false)
-                  }}
-                >
-                  <span className="search-item-main">
-                    <span className="search-item-name">{item.name}</span>
-                    <span className="search-item-code">{plainCode(item.code)}</span>
-                    <span className="tag">{item.board}</span>
-                    {item.is_suspended && <span className="tag tag-warn">停牌</span>}
-                  </span>
-                  <span className={`search-item-price ${trendClass(item.change_percent)}`}>
-                    {item.price_fmt}
-                    <em>{item.percent_fmt}</em>
-                  </span>
-                </button>
-              ))}
+              {search.results.map((item) => {
+                const watched = isWatched(item.code)
+                return (
+                  <div key={item.code} className="search-item">
+                    <span className="search-item-main">
+                      <span className="search-item-name">{item.name}</span>
+                      <span className="search-item-code">{plainCode(item.code)}</span>
+                      <span className="tag">{item.board}</span>
+                      {item.is_suspended && <span className="tag tag-warn">停牌</span>}
+                    </span>
+                    <span className="search-item-right">
+                      <span className={`search-item-price ${trendClass(item.change_percent)}`}>
+                        {item.price_fmt}
+                        <em>{item.percent_fmt}</em>
+                      </span>
+                      <button
+                        type="button"
+                        className={`watch-btn ${watched ? 'watched' : ''}`}
+                        disabled={watched}
+                        onClick={() => {
+                          onAddWatch(item.code)
+                          setOpen(false)
+                          search.setKeyword('')
+                        }}
+                      >
+                        {watched ? '已自选' : '+ 自选'}
+                      </button>
+                    </span>
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>

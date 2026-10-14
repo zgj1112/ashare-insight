@@ -38,3 +38,9 @@ class TTLCache:
         if self._value is None:
             return 0.0
         return max(0.0, self.ttl - (self._expire_at - time.time()))
+
+    def clear(self) -> None:
+        """丢弃当前缓存值，下次读取时重新加载。"""
+        with self._lock:
+            self._value = None
+            self._expire_at = 0.0

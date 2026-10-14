@@ -3,12 +3,21 @@
 from __future__ import annotations
 
 import logging
+import threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from statistics import median
 
 from app.core.cache import TTLCache
-from app.core.config import TTL_INDEX_QUOTE, TTL_RANK, TTL_SNAPSHOT, TTL_STOCK_LIST
+from app.core.config import (
+    DEFAULT_WATCHLIST,
+    TTL_INDEX_QUOTE,
+    TTL_RANK,
+    TTL_SNAPSHOT,
+    TTL_STOCK_LIST,
+    TTL_WATCH_QUOTE,
+    WATCHLIST_MAX,
+)
 from app.core.utils import CN_TZ, format_amount, limit_prices, market_state
 from app.models.market import (
     IndexCard,
@@ -39,6 +48,23 @@ _index_cache = TTLCache(TTL_INDEX_QUOTE, "index")
 _rank_cache = TTLCache(TTL_RANK, "rank")
 _snapshot_cache = TTLCache(TTL_SNAPSHOT, "snapshot")
 _stock_list_cache = TTLCache(TTL_STOCK_LIST, "stock_list")
+_watch_cache = TTLCache(TTL_WATCH_QUOTE, "watchlist")
+
+# 全市场清单的代码索引（供自选补齐换手率等字段），预热是懒加载的
+_stock_index_cache = TTLCache(TTL_STOCK_LIST, "stock_index")
+_STOCK_INDEX_NOT_READY = object()
+_warm_pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="stock-index")
+_stock_index_warming = False
+_warm_lock = threading.Lock()
+
+
+def _ensure_stock_index_warming() -> None:
+    global _stock_index_warming
+    with _warm_lock:
+        if _stock_index_warming:
+            return
+        _stock_index_warming = True
+    _warm_pool.submit(_warm_stock_index)
 
 SOURCE_NAME = "新浪财经"
 
@@ -76,11 +102,34 @@ def get_snapshot() -> list[dict]:
 
 
 def get_stock_list() -> list[dict]:
-    """全市场标的清单（代码+名称+基础行情），供搜索使用，缓存 12 小时。
+    """全市场标的清单（代码+名称+基础行情），供搜索与字段补齐使用，缓存 12 小时。
 
     数据源的 symbol 过滤参数实际不生效，因此搜索改在本地清单上完成。
     """
     return _stock_list_cache.get_or_load(client.fetch_all)
+
+
+def _stock_index() -> dict[str, dict]:
+    """「带前缀代码 -> 列表行」映射。
+
+    全市场清单约 5600 条、抓取约 2 秒，首次调用只在后台线程预热，
+    当前请求先返回空映射（换手率等字段显示为 --），预热完成后自动生效。
+    """
+    cached = _stock_index_cache.get_or_load(lambda: _STOCK_INDEX_NOT_READY)
+    return cached if cached is not _STOCK_INDEX_NOT_READY else {}
+
+
+def _warm_stock_index() -> None:
+    global _stock_index_warming
+    try:
+        rows = get_stock_list()
+        # 先清掉「未就绪」哨兵，再写入真正的映射，否则读取方仍会看到哨兵
+        _stock_index_cache.clear()
+        _stock_index_cache.get_or_load(lambda: {row["code"]: row for row in rows})
+        logger.info("全市场清单预热完成，共 %s 只标的", len(rows))
+    except Exception as exc:  # 预热失败不影响主流程，允许下次请求重试
+        logger.warning("全市场清单预热失败: %s", exc)
+        _stock_index_warming = False
 
 
 def _rank(sort_by: str, order: str, limit: int, exclude_suspended: bool = True) -> list[dict]:
@@ -188,6 +237,63 @@ def get_rank_response(sort_by: str = "change_percent", order: str = "desc", limi
 def get_quote(code: str) -> Quote | None:
     rows = client.fetch_quotes([code])
     return _to_quote(rows[0]) if rows else None
+
+
+def get_quotes(codes: list[str], use_cache: bool = True) -> list[Quote]:
+    """批量取行情，返回顺序与入参顺序一致（查不到的代码会被跳过）。
+
+    自选列表每次刷新都会调用，因此带 5 秒缓存；缓存以代码组合为键，
+    避免不同自选组合互相覆盖。换手率、市值等字段由全市场清单补齐。
+    """
+    ordered: list[str] = []
+    seen: set[str] = set()
+    for raw in codes:
+        code = raw.strip().lower()
+        if not code or code in seen:
+            continue
+        seen.add(code)
+        ordered.append(code)
+    if not ordered:
+        return []
+    ordered = ordered[:WATCHLIST_MAX]
+
+    list_fields = _stock_index()
+    if not list_fields:
+        # 首次请求时后台预热全市场清单，本次先用快照接口的数据返回
+        _ensure_stock_index_warming()
+
+    def enrich(rows: list[dict]) -> list[dict]:
+        """用全市场清单补齐换手率、市值等快照接口缺失的字段。"""
+        if not list_fields:
+            return rows
+        for row in rows:
+            extra = list_fields.get(row["code"])
+            if not extra:
+                continue
+            for field in ("turnover_rate", "pe", "pb", "market_cap", "float_cap"):
+                if row.get(field) is None and extra.get(field) is not None:
+                    row[field] = extra[field]
+        return rows
+
+    def load() -> dict[str, dict]:
+        store = _watch_cache.get_or_load(lambda: {}) if use_cache else {}
+        key = ",".join(ordered)
+        if key not in store:
+            rows = enrich(client.fetch_quotes(ordered))
+            if use_cache:
+                store.clear()  # 只保留最近一次自选组合，避免缓存无限增长
+                store[key] = {row["code"]: row for row in rows}
+            else:
+                return {row["code"]: row for row in rows}
+        return store[key]
+
+    mapping = load()
+    return [_to_quote(mapping[code]) for code in ordered if code in mapping]
+
+
+def get_default_watchlist() -> list[str]:
+    """自选股默认清单（浏览器首次访问时使用）。"""
+    return list(DEFAULT_WATCHLIST)
 
 
 def get_kline(code: str, period: str = "day", adjust: str = "qfq", limit: int = 120) -> KlineResponse:

@@ -55,6 +55,21 @@ def quote(code: str) -> Quote:
     return result
 
 
+@router.get("/quotes", response_model=list[Quote], summary="批量行情（自选列表用）")
+def quotes(
+    codes: str = Query(..., description="逗号分隔的代码，如 sh600519,sz300750"),
+) -> list[Quote]:
+    parsed = [item.strip() for item in codes.split(",") if item.strip()]
+    if not parsed:
+        raise HTTPException(status_code=400, detail="codes 不能为空")
+    return market_service.get_quotes(parsed)
+
+
+@router.get("/watchlist/default", response_model=list[str], summary="自选股默认清单")
+def watchlist_default() -> list[str]:
+    return market_service.get_default_watchlist()
+
+
 @router.get("/kline/{code}", response_model=KlineResponse, summary="K 线数据")
 def kline(
     code: str,

@@ -5,7 +5,9 @@ import { IndexBoard } from './components/IndexBoard'
 import { MarketBreadth } from './components/MarketBreadth'
 import { MarketMetrics } from './components/MarketMetrics'
 import { RankList } from './components/RankList'
+import { WatchList } from './components/WatchList'
 import { useOverview } from './hooks/useMarket'
+import { useWatchlist } from './hooks/useWatchlist'
 import type { MarketStats } from './types/market'
 import './App.css'
 
@@ -26,6 +28,7 @@ const EMPTY_STATS: MarketStats = {
 
 function App() {
   const { data, loading, refreshing, error, lastUpdated, refresh } = useOverview(30_000)
+  const watchlist = useWatchlist(30_000)
 
   return (
     <div className="app">
@@ -34,6 +37,8 @@ function App() {
         lastUpdated={lastUpdated}
         refreshing={refreshing}
         onRefresh={refresh}
+        isWatched={watchlist.has}
+        onAddWatch={watchlist.add}
       />
 
       <main className="app-main">
@@ -47,6 +52,14 @@ function App() {
         )}
 
         <IndexBoard indices={data?.indices ?? []} loading={loading} />
+
+        <WatchList
+          quotes={watchlist.quotes}
+          loading={watchlist.loading}
+          error={watchlist.error}
+          usingDefault={watchlist.usingDefault}
+          onRemove={watchlist.remove}
+        />
 
         <div className="content-grid">
           <RankList

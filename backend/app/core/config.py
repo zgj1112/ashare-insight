@@ -24,6 +24,13 @@ TTL_INDEX_QUOTE = 5
 TTL_RANK = 15
 TTL_SNAPSHOT = 30
 TTL_STOCK_LIST = 12 * 60 * 60
+TTL_WATCH_QUOTE = 5
+
+# 自选股默认清单（前端首次访问时使用，之后以浏览器本地记录为准）
+DEFAULT_WATCHLIST = ["sh600519", "sz300750"]
+
+# 自选股数量上限，避免单次批量行情请求过大
+WATCHLIST_MAX = 60
 
 # 全市场快照并发线程数
 SNAPSHOT_WORKERS = int(os.getenv("ASHARE_SNAPSHOT_WORKERS", "8"))

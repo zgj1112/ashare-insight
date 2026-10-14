@@ -2,7 +2,7 @@
  * 后端接口封装。开发环境通过 Vite 代理访问 /api，无需处理跨域。
  */
 
-import type { MarketOverview, SearchResponse } from '../types/market'
+import type { MarketOverview, Quote, SearchResponse } from '../types/market'
 
 const BASE = import.meta.env.VITE_API_BASE ?? ''
 
@@ -45,4 +45,15 @@ export function fetchOverview(signal?: AbortSignal): Promise<MarketOverview> {
 /** 搜索标的 */
 export function searchStocks(keyword: string, signal?: AbortSignal): Promise<SearchResponse> {
   return request<SearchResponse>(`/api/market/search?keyword=${encodeURIComponent(keyword)}`, signal)
+}
+
+/** 批量行情（自选列表用），返回顺序与入参一致 */
+export function fetchQuotes(codes: string[], signal?: AbortSignal): Promise<Quote[]> {
+  if (codes.length === 0) return Promise.resolve([])
+  return request<Quote[]>(`/api/market/quotes?codes=${encodeURIComponent(codes.join(','))}`, signal)
+}
+
+/** 自选股默认清单 */
+export function fetchDefaultWatchlist(signal?: AbortSignal): Promise<string[]> {
+  return request<string[]>('/api/market/watchlist/default', signal)
 }
