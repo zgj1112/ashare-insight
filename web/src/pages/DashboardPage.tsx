@@ -7,6 +7,7 @@ import { IndexBoard } from '../components/IndexBoard'
 import { MarketBreadth } from '../components/MarketBreadth'
 import { MarketMetrics } from '../components/MarketMetrics'
 import { RankList } from '../components/RankList'
+import { SectorList } from '../components/SectorList'
 import { TopControls } from '../components/TopControls'
 import { WatchList } from '../components/WatchList'
 import { useTheme } from '../theme/ThemeProvider'
@@ -52,6 +53,7 @@ interface Props {
   lastUpdated: number | null
   onRefresh: () => void
   watchlist: WatchlistBinding
+  rowCount: number
 }
 
 export function DashboardPage({
@@ -62,6 +64,7 @@ export function DashboardPage({
   lastUpdated,
   onRefresh,
   watchlist,
+  rowCount,
 }: Props) {
   const { isVisible, layout } = useTheme()
   const stats = data?.stats ?? EMPTY_STATS
@@ -80,6 +83,10 @@ export function DashboardPage({
         )
       case 'main_inflow':
         return <FlowBoards items={data?.main_inflow ?? []} loading={loading} />
+      case 'sectors':
+        return (
+          <SectorList items={data?.top_sectors ?? []} loading={loading} rowCount={rowCount} />
+        )
       case 'gainers':
         return (
           <RankList
@@ -167,6 +174,13 @@ export function DashboardPage({
           <div className="empty-layout">所有卡片都已隐藏，可在展示设置中重新打开</div>
         )}
       </main>
+
+      <footer className="app-footer">
+        <span>数据来源：{data?.source ?? '—'}</span>
+        <span>交易日：{data?.trade_date ?? '—'}</span>
+        <span>数据生成：{data?.as_of ?? '—'}</span>
+        <span>每 30 秒自动刷新 · 行情仅供研究参考，不构成投资建议</span>
+      </footer>
     </div>
   )
 }

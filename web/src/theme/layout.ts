@@ -10,7 +10,14 @@
  * 区域内不支持跨区拖动，但可以上下调序、隐藏，并在恢复默认时一键还原。
  */
 
-export type CardId = 'watchlist' | 'main_inflow' | 'gainers' | 'volume' | 'breadth' | 'metrics'
+export type CardId =
+  | 'watchlist'
+  | 'sectors'
+  | 'main_inflow'
+  | 'gainers'
+  | 'volume'
+  | 'breadth'
+  | 'metrics'
 
 export const LAYOUT_STORAGE_KEY = 'ashare-insight:layout'
 
@@ -18,11 +25,12 @@ export const LAYOUT_STORAGE_KEY = 'ashare-insight:layout'
  * 布局配置版本。默认顺序调整后需要 +1：
  * 旧版本的本地配置会被丢弃并回到新默认，避免老用户看不到新的默认布局。
  */
-export const LAYOUT_VERSION = 2
+export const LAYOUT_VERSION = 3
 
 export const DEFAULT_CARD_ORDER: CardId[] = [
   'breadth',
   'watchlist',
+  'sectors',
   'main_inflow',
   'gainers',
   'volume',
@@ -69,6 +77,12 @@ export const CARD_META: Record<CardId, CardMeta> = {
     title: '主力净流入榜',
     description: '主力（超大单）净额降序，观察资金流入方向',
     region: '资金流',
+  },
+  sectors: {
+    id: 'sectors',
+    title: '板块涨幅榜',
+    description: '行业 / 概念板块按涨跌幅降序，含成分股数、成交额与领涨股',
+    region: '板块',
   },
   gainers: {
     id: 'gainers',

@@ -42,7 +42,8 @@ src/
 │  ├─ RowCountToggle.tsx      行数档位（10/20/30）切换
 │  ├─ IndexBoard.tsx          指数卡片
 │  ├─ FlowList.tsx            主力净流入榜
-│  ├─ WatchList.tsx           我的自选（超过限高内部滚动，表头吸顶）
+│  ├─ SectorList.tsx          板块涨幅榜（行业 / 概念切换）
+│  ├─ WatchList.tsx           我的自选（不限制高度，全部展示）
 │  ├─ RankList.tsx            榜单表格（涨幅/成交量共用）
 │  ├─ MarketBreadth.tsx       涨跌家数与涨跌停统计
 │  └─ MarketMetrics.tsx       平均/中位涨跌幅等市场概览

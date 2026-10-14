@@ -2,7 +2,7 @@
  * 后端接口封装。开发环境通过 Vite 代理访问 /api，无需处理跨域。
  */
 
-import type { MarketOverview, Quote, SearchResponse } from '../types/market'
+import type { MarketOverview, Quote, SearchResponse, SectorItem } from '../types/market'
 
 const BASE = import.meta.env.VITE_API_BASE ?? ''
 
@@ -51,6 +51,15 @@ export function searchStocks(keyword: string, signal?: AbortSignal): Promise<Sea
 export function fetchQuotes(codes: string[], signal?: AbortSignal): Promise<Quote[]> {
   if (codes.length === 0) return Promise.resolve([])
   return request<Quote[]>(`/api/market/quotes?codes=${encodeURIComponent(codes.join(','))}`, signal)
+}
+
+/** 板块涨幅榜（行业 / 概念） */
+export function fetchSectors(
+  kind: 'industry' | 'concept',
+  limit = 30,
+  signal?: AbortSignal,
+): Promise<SectorItem[]> {
+  return request<SectorItem[]>(`/api/market/sectors?kind=${kind}&limit=${limit}`, signal)
 }
 
 /** 自选股默认清单 */

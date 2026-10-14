@@ -53,6 +53,29 @@ export interface FlowItem extends Quote {
   main_net_ratio_fmt: string
 }
 
+export interface SectorItem {
+  code: string
+  name: string
+  kind: 'industry' | 'concept'
+  stock_count: number
+  avg_price: number
+  change: number
+  change_percent: number
+  volume: number
+  amount: number
+
+  lead_code: string
+  lead_symbol: string
+  lead_name: string
+  lead_change_percent: number
+  lead_price: number
+
+  percent_fmt: string
+  amount_fmt: string
+  lead_percent_fmt: string
+  lead_price_fmt: string
+}
+
 export interface MarketStats {
   total: number
   up: number
@@ -86,6 +109,9 @@ export interface MarketOverview {
   top_gainers: Quote[]
   /** 成交量榜 */
   top_volume: Quote[]
+  /** 板块涨幅榜（默认行业） */
+  top_sectors: SectorItem[]
+  sector_kind: string
   top_losers: Quote[]
   top_turnover: Quote[]
 }

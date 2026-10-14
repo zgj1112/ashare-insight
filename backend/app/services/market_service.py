@@ -21,7 +21,7 @@ from app.core.config import (
     TTL_WATCH_QUOTE,
     WATCHLIST_MAX,
 )
-from app.core.utils import CN_TZ, format_amount, limit_prices, market_state
+from app.core.utils import CN_TZ, format_amount, format_percent, format_price, limit_prices, market_state
 from app.models.market import (
     FlowItem,
     IndexCard,
@@ -31,6 +31,7 @@ from app.models.market import (
     Quote,
     RankResponse,
     SearchResponse,
+    SectorItem,
 )
 from app.services.sina_client import SinaClient, build_display_fields
 
@@ -71,6 +72,43 @@ def _ensure_stock_index_warming() -> None:
     _warm_pool.submit(_warm_stock_index)
 
 SOURCE_NAME = "新浪财经"
+
+
+def _to_sector_item(raw: dict, kind: str) -> SectorItem:
+    """把板块行转成 SectorItem，并补齐展示字段。"""
+    return SectorItem(
+        code=raw.get("code", ""),
+        name=raw.get("name", ""),
+        kind=kind,  # type: ignore[arg-type]
+        stock_count=int(raw.get("stock_count") or 0),
+        avg_price=round(raw.get("avg_price") or 0.0, 3),
+        change=round(raw.get("change") or 0.0, 3),
+        change_percent=round(raw.get("change_percent") or 0.0, 2),
+        volume=round(raw.get("volume") or 0.0, 0),
+        amount=round(raw.get("amount") or 0.0, 2),
+        lead_code=raw.get("lead_code", ""),
+        lead_symbol=raw.get("lead_symbol", ""),
+        lead_name=raw.get("lead_name", ""),
+        lead_change_percent=round(raw.get("lead_change_percent") or 0.0, 2),
+        lead_price=round(raw.get("lead_price") or 0.0, 3),
+        percent_fmt=format_percent(raw.get("change_percent") or 0.0),
+        amount_fmt=format_amount(raw.get("amount") or 0.0),
+        lead_percent_fmt=format_percent(raw.get("lead_change_percent") or 0.0),
+        lead_price_fmt=format_price(raw.get("lead_price") or 0.0),
+    )
+
+
+def get_sector_rank(kind: str = "industry", limit: int = 10) -> list[SectorItem]:
+    """板块涨幅榜：kind 为 industry（行业）或 concept（概念），按涨跌幅降序。"""
+    if kind not in ("industry", "concept"):
+        kind = "industry"
+    cache_key = f"sector|{kind}"
+    store = _rank_cache.get_or_load(lambda: {})
+    if cache_key not in store:
+        rows = client.fetch_sectors(kind)
+        rows.sort(key=lambda row: row.get("change_percent", 0.0), reverse=True)
+        store[cache_key] = rows
+    return [_to_sector_item(row, kind) for row in store[cache_key][:limit]]
 
 
 def _to_quote(raw: dict, model=Quote) -> Quote:
@@ -249,7 +287,7 @@ def get_overview(limit: int = 10) -> MarketOverview:
     top_losers / top_turnover 仍保留在响应里，供其他页面或后续扩展使用。
     """
     limit = max(1, min(limit, ROW_COUNT_MAX))
-    with ThreadPoolExecutor(max_workers=6) as pool:
+    with ThreadPoolExecutor(max_workers=7) as pool:
         future_indices = pool.submit(get_indices)
         future_inflow = pool.submit(_rank_main_inflow, limit, "desc")
         future_outflow = pool.submit(_rank_main_inflow, limit, "asc")
@@ -257,6 +295,7 @@ def get_overview(limit: int = 10) -> MarketOverview:
             _rank, "change_percent", "desc", limit, True, GAINERS_MAX_PERCENT
         )
         future_volume = pool.submit(_rank, "volume", "desc", limit)
+        future_sectors = pool.submit(get_sector_rank, "industry", limit)
         future_losers = pool.submit(_rank, "change_percent", "asc", limit)
         future_turnover = pool.submit(_rank, "amount", "desc", limit)
 
@@ -265,6 +304,7 @@ def get_overview(limit: int = 10) -> MarketOverview:
         outflow = future_outflow.result()
         gainers = future_gainers.result()
         volume_top = future_volume.result()
+        sectors = future_sectors.result()
         losers = future_losers.result()
         turnover = future_turnover.result()
 
@@ -288,6 +328,8 @@ def get_overview(limit: int = 10) -> MarketOverview:
         main_outflow=[_to_flow_item(row) for row in outflow],
         top_gainers=[_to_quote(row) for row in gainers],
         top_volume=[_to_quote(row) for row in volume_top],
+        top_sectors=sectors,
+        sector_kind="industry",
         top_losers=[_to_quote(row) for row in losers],
         top_turnover=[_to_quote(row) for row in turnover],
     )

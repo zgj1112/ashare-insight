@@ -9,7 +9,7 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  padding: 20px 24px 0;
+  padding: 20px 24px 32px;
   gap: 18px;
   max-width: 1560px;
   margin: 0 auto;
@@ -629,6 +629,74 @@
   color: var(--down);
 }
 
+/* -------------------------------------------------------------- 板块榜 */
+.panel-head-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.seg-btn {
+  padding: 4px 12px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 0.8571rem;
+}
+
+.seg-btn:hover {
+  color: var(--text);
+  background: var(--panel-soft);
+}
+
+.seg-btn.active {
+  background: var(--accent-soft);
+  color: var(--accent-text-strong);
+  font-weight: 600;
+}
+
+.sector-table .col-count,
+.sector-table .col-amount {
+  font-family: var(--mono);
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.sector-table .col-count {
+  width: 96px;
+}
+
+.sector-table .col-amount {
+  width: 120px;
+}
+
+.sector-table .col-lead {
+  width: 260px;
+  text-align: left !important;
+  white-space: nowrap;
+}
+
+.lead-name {
+  font-weight: 500;
+  margin-right: 8px;
+}
+
+.lead-percent {
+  margin-left: 8px;
+  font-family: var(--mono);
+  font-size: 0.8929rem;
+}
+
 /* -------------------------------------------------------------- 自选列表 */
 .watchlist .panel-head h2 {
   display: flex;
@@ -922,7 +990,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px 20px;
-  padding: 16px 0 20px;
+  padding: 16px 0 4px;
   font-size: 0.8214rem;
   color: var(--text-faint);
   border-top: 1px solid var(--border-soft);

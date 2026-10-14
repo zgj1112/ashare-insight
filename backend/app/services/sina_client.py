@@ -54,6 +54,11 @@ SINA_FUND_FLOW_URL = (
     "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/"
     "MoneyFlow.ssl_bkzj_ssggzj"
 )
+# 板块行情：行业（申万风格）与概念板块，返回 JS 变量赋值的 JSON
+SINA_SECTOR_URLS = {
+    "industry": "https://vip.stock.finance.sina.com.cn/q/view/newSinaHy.php",
+    "concept": "https://vip.stock.finance.sina.com.cn/q/view/newFLJK.php?param=class",
+}
 
 QUOTE_HEADERS = {
     "User-Agent": USER_AGENT,
@@ -62,6 +67,10 @@ QUOTE_HEADERS = {
 LIST_HEADERS = {
     "User-Agent": USER_AGENT,
     "Referer": "https://vip.stock.finance.sina.com.cn/",
+}
+SECTOR_HEADERS = {
+    "User-Agent": USER_AGENT,
+    "Referer": "https://finance.sina.com.cn/",
 }
 
 # 支持的榜单排序字段 -> 新浪接口的 sort 参数
@@ -227,6 +236,54 @@ class SinaClient:
         except json.JSONDecodeError as exc:
             raise SinaClientError(f"榜单数据解析失败: {exc}") from exc
         return [self._convert_row(row) for row in rows if isinstance(row, dict)]
+
+    def fetch_sectors(self, kind: str = "industry") -> list[dict]:
+        """板块行情：kind 为 industry（行业）或 concept（概念）。
+
+        数据源返回形如 `var S_Finance_bankuai_xxx = {...};` 的赋值语句，
+        每个板块的取值是逗号分隔的字符串：
+          0 板块代码 1 板块名 2 成分股数 3 平均价 4 平均涨跌额 5 涨跌幅%
+          6 成交量(股) 7 成交额(元) 8 领涨股代码 9 领涨股涨跌幅% 10 领涨股价
+          11 领涨股涨跌额 12 领涨股名
+        """
+        url = SINA_SECTOR_URLS.get(kind) or SINA_SECTOR_URLS["industry"]
+        text = self._request(url, SECTOR_HEADERS, "gbk").strip()
+        if "=" not in text:
+            return []
+        payload = text.split("=", 1)[1].strip().rstrip(";")
+        try:
+            raw = json.loads(payload)
+        except json.JSONDecodeError as exc:
+            raise SinaClientError(f"板块数据解析失败: {exc}") from exc
+        if not isinstance(raw, dict):
+            return []
+        return [self._convert_sector_row(value) for value in raw.values() if isinstance(value, str)]
+
+    @staticmethod
+    def _convert_sector_row(value: str) -> dict:
+        fields = value.split(",")
+        while len(fields) < 13:
+            fields.append("")
+        lead_symbol = fields[8].strip().lower()
+        lead_code = ""
+        lead_digits = ""
+        if lead_symbol:
+            lead_code, lead_digits, _ = normalize_code(lead_symbol)
+        return {
+            "code": fields[0].strip(),
+            "name": fields[1].strip(),
+            "stock_count": int(to_float(fields[2])),
+            "avg_price": to_float(fields[3]),
+            "change": to_float(fields[4]),
+            "change_percent": to_float(fields[5]),
+            "volume": to_float(fields[6]),
+            "amount": to_float(fields[7]),
+            "lead_code": lead_code,
+            "lead_symbol": lead_digits,
+            "lead_name": fields[12].strip(),
+            "lead_change_percent": to_float(fields[9]),
+            "lead_price": to_float(fields[10]),
+        }
 
     def fetch_rank(
         self,

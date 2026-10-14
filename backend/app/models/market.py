@@ -94,6 +94,9 @@ class MarketOverview(BaseModel):
     top_gainers: list[Quote] = Field(default_factory=list)
     # 成交量榜
     top_volume: list[Quote] = Field(default_factory=list)
+    # 板块涨幅榜（默认行业，可切换概念）
+    top_sectors: list[SectorItem] = Field(default_factory=list)
+    sector_kind: str = "industry"
     top_losers: list[Quote] = Field(default_factory=list)
     top_turnover: list[Quote] = Field(default_factory=list)
 
@@ -130,6 +133,31 @@ class FlowItem(Quote):
     retail_net_inflow: float = Field(default=0.0, description="非主力（中小单）净额，元")
     main_net_fmt: str = ""
     main_net_ratio_fmt: str = ""
+
+
+class SectorItem(BaseModel):
+    """板块（行业 / 概念）行情条目。"""
+
+    code: str
+    name: str
+    kind: Literal["industry", "concept"] = "industry"
+    stock_count: int = 0
+    avg_price: float = 0.0
+    change: float = 0.0
+    change_percent: float = 0.0
+    volume: float = Field(default=0.0, description="成交量（股）")
+    amount: float = Field(default=0.0, description="成交额（元）")
+
+    lead_code: str = ""
+    lead_symbol: str = ""
+    lead_name: str = ""
+    lead_change_percent: float = 0.0
+    lead_price: float = 0.0
+
+    percent_fmt: str = ""
+    amount_fmt: str = ""
+    lead_percent_fmt: str = ""
+    lead_price_fmt: str = ""
 
 
 class RankResponse(BaseModel):

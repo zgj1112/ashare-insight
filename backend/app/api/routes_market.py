@@ -11,6 +11,7 @@ from app.models.market import (
     Quote,
     RankResponse,
     SearchResponse,
+    SectorItem,
 )
 from app.services import market_service
 
@@ -56,6 +57,14 @@ def quote(code: str) -> Quote:
     if result is None:
         raise HTTPException(status_code=404, detail=f"未找到标的: {code}")
     return result
+
+
+@router.get("/sectors", response_model=list[SectorItem], summary="板块涨幅榜")
+def sectors(
+    kind: str = Query("industry", pattern="^(industry|concept)$", description="industry 行业 / concept 概念"),
+    limit: int = Query(10, ge=1, le=50),
+) -> list[SectorItem]:
+    return market_service.get_sector_rank(kind=kind, limit=limit)
 
 
 @router.get("/fund-flow", response_model=list[FlowItem], summary="主力资金净流入榜")
