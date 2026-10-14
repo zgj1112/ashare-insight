@@ -16,11 +16,8 @@ import type { MarketOverview, MarketStats, Quote } from '../types/market'
 /** 与后端 GAINERS_MAX_PERCENT 保持一致，仅用于文案展示 */
 const GAINERS_MAX_PERCENT = 11
 
-/** 并排展示的区域：同一个数组里的卡片放在同一行 */
-const PAIRS: CardId[][] = [
-  ['gainers', 'volume'],
-  ['breadth', 'metrics'],
-]
+/** 并排展示的区域：仅这里的卡片放在同一行，其余卡片独占整行 */
+const PAIRS: CardId[][] = [['gainers', 'volume']]
 
 const EMPTY_STATS: MarketStats = {
   total: 0,
@@ -125,7 +122,7 @@ export function DashboardPage({
       blocks.push(
         <div className={`card-pair ${visible.length === 1 ? 'single' : ''}`} key={pair.join('-')}>
           {visible.map((item) => (
-            <div className="card-slot" key={item}>
+            <div className="card-slot" key={item} data-card={item}>
               {renderCard(item)}
             </div>
           ))}
@@ -135,7 +132,7 @@ export function DashboardPage({
     }
     done.add(id)
     blocks.push(
-      <div className="card-block" key={id}>
+      <div className="card-block" key={id} data-card={id}>
         {renderCard(id)}
       </div>,
     )

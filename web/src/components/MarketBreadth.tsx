@@ -1,4 +1,4 @@
-/** 市场情绪与涨跌统计。 */
+/** 市场情绪：单行横条，展示涨跌家数分布与涨跌停数量。 */
 
 import type { MarketStats } from '../types/market'
 
@@ -19,34 +19,33 @@ export function MarketBreadth({ stats, loading }: Props) {
     { key: 'flat', label: '平盘', value: stats.flat, className: 'trend-flat' },
     { key: 'limit_up', label: '涨停', value: stats.limit_up, className: 'trend-up' },
     { key: 'limit_down', label: '跌停', value: stats.limit_down, className: 'trend-down' },
-    { key: 'suspended', label: '停牌', value: stats.suspended, className: 'trend-flat' },
   ]
 
   return (
-    <section className="panel breadth">
-      <header className="panel-head">
-        <div>
-          <h2>市场情绪</h2>
-          <p>
-            全市场 {stats.total || '--'} 只标的 · 成交额 {stats.total_amount_fmt || '--'}
-          </p>
-        </div>
-        <span className="panel-count">上涨占比 {stats.up_ratio}%</span>
-      </header>
+    <section className="panel breadth-bar-panel">
+      <span className="breadth-title">市场情绪</span>
 
-      <div className="breadth-bar">
+      <div className="breadth-bar" title={`上涨 ${stats.up} · 下跌 ${stats.down} · 平盘 ${stats.flat}`}>
         <span className="bar-up" style={{ width: `${loading ? 0 : upWidth}%` }} />
         <span className="bar-flat" style={{ width: `${loading ? 0 : flatWidth}%` }} />
         <span className="bar-down" style={{ width: `${loading ? 0 : downWidth}%` }} />
       </div>
 
-      <div className="breadth-grid">
+      <div className="breadth-inline">
         {cells.map((cell) => (
-          <div key={cell.key} className="breadth-cell">
-            <span className="breadth-label">{cell.label}</span>
+          <span key={cell.key} className="breadth-item">
+            <span className="breadth-item-label">{cell.label}</span>
             <strong className={cell.className}>{loading ? '--' : cell.value}</strong>
-          </div>
+          </span>
         ))}
+        <span className="breadth-item breadth-item-extra">
+          <span className="breadth-item-label">上涨占比</span>
+          <strong className="trend-flat">{loading ? '--' : `${stats.up_ratio}%`}</strong>
+        </span>
+        <span className="breadth-item breadth-item-extra">
+          <span className="breadth-item-label">成交额</span>
+          <strong className="trend-flat">{loading ? '--' : stats.total_amount_fmt}</strong>
+        </span>
       </div>
     </section>
   )

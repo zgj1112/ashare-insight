@@ -152,7 +152,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
-  const resetLayout = useCallback(() => setLayout({ ...DEFAULT_LAYOUT, order: [...DEFAULT_LAYOUT.order] }), [])
+  const resetLayout = useCallback(
+    () => setLayout({ ...DEFAULT_LAYOUT, order: [...DEFAULT_LAYOUT.order] }),
+    [],
+  )
 
   const value = useMemo<DisplayContextValue>(
     () => ({

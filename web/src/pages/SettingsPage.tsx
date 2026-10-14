@@ -55,7 +55,11 @@ export function SettingsPage({ overview, lastUpdated }: Props) {
               <div key={group.region} className="settings-group">
                 <div className="settings-group-head">
                   <span className="settings-region">{group.region}</span>
-                  {group.cards.length > 1 && <span className="settings-hint">并排区域</span>}
+                  {group.cards.length > 1 && (
+                    <span className="settings-hint">
+                      {CARD_META[group.cards[0]].regionPaired ? '并排区域' : '整行展示'}
+                    </span>
+                  )}
                 </div>
 
                 {group.cards.map((id) => (

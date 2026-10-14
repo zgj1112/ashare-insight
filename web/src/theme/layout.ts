@@ -14,21 +14,29 @@ export type CardId = 'watchlist' | 'main_inflow' | 'gainers' | 'volume' | 'bread
 
 export const LAYOUT_STORAGE_KEY = 'ashare-insight:layout'
 
+/**
+ * 布局配置版本。默认顺序调整后需要 +1：
+ * 旧版本的本地配置会被丢弃并回到新默认，避免老用户看不到新的默认布局。
+ */
+export const LAYOUT_VERSION = 2
+
 export const DEFAULT_CARD_ORDER: CardId[] = [
+  'breadth',
   'watchlist',
   'main_inflow',
   'gainers',
   'volume',
-  'breadth',
   'metrics',
 ]
 
 export interface LayoutConfig {
+  version: number
   order: CardId[]
   hidden: CardId[]
 }
 
 export const DEFAULT_LAYOUT: LayoutConfig = {
+  version: LAYOUT_VERSION,
   order: [...DEFAULT_CARD_ORDER],
   hidden: [],
 }
@@ -39,13 +47,21 @@ export interface CardMeta {
   description: string
   /** 所属区域，用于提示「同区域卡片并排展示」 */
   region: string
+  /** 并排区域：仅这些区域的卡片会左右并排，其余卡片独占整行 */
+  regionPaired?: boolean
 }
 
 export const CARD_META: Record<CardId, CardMeta> = {
+  breadth: {
+    id: 'breadth',
+    title: '市场情绪',
+    description: '单行横条：涨跌平家数分布、涨停跌停、上涨占比与成交额',
+    region: '统计',
+  },
   watchlist: {
     id: 'watchlist',
     title: '我的自选',
-    description: '自选股实时行情，支持增删；行数由右上角档位决定只影响榜单',
+    description: '自选股实时行情，支持增删；行数档位只影响榜单',
     region: '自选',
   },
   main_inflow: {
@@ -59,24 +75,20 @@ export const CARD_META: Record<CardId, CardMeta> = {
     title: '涨幅榜',
     description: '仅显示涨幅 11% 以内的标的，避开 20cm 涨停占榜',
     region: '榜单',
+    regionPaired: true,
   },
   volume: {
     id: 'volume',
     title: '成交量榜',
     description: '按成交量（手）降序，观察换手活跃的标的',
     region: '榜单',
-  },
-  breadth: {
-    id: 'breadth',
-    title: '市场情绪',
-    description: '涨跌平家数、涨停跌停停牌与上涨占比',
-    region: '统计',
+    regionPaired: true,
   },
   metrics: {
     id: 'metrics',
     title: '市场概览',
     description: '平均/中位涨跌幅、上涨占比、涨跌家数比',
-    region: '统计',
+    region: '概览',
   },
 }
 
@@ -92,14 +104,17 @@ export function normalizeLayout(config: Partial<LayoutConfig> | null | undefined
     if (!order.includes(id)) order.push(id)
   }
   const hidden = Array.isArray(config?.hidden) ? config!.hidden.filter(isCardId) : []
-  return { order, hidden: Array.from(new Set(hidden)) }
+  return { version: LAYOUT_VERSION, order, hidden: Array.from(new Set(hidden)) }
 }
 
 export function readLayout(): LayoutConfig {
   try {
     const raw = window.localStorage.getItem(LAYOUT_STORAGE_KEY)
     if (!raw) return normalizeLayout(DEFAULT_LAYOUT)
-    return normalizeLayout(JSON.parse(raw) as Partial<LayoutConfig>)
+    const parsed = JSON.parse(raw) as Partial<LayoutConfig>
+    // 版本不一致说明默认布局已更新，直接回到新默认
+    if (parsed?.version !== LAYOUT_VERSION) return normalizeLayout(DEFAULT_LAYOUT)
+    return normalizeLayout(parsed)
   } catch {
     return normalizeLayout(DEFAULT_LAYOUT)
   }

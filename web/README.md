@@ -68,11 +68,14 @@ src/
 
 ## 卡片布局约定
 
-- 卡片清单与区域定义集中在 `src/theme/layout.ts`：`CARD_META` 描述每张卡片，`PAIRS` 在
-  `DashboardPage` 中声明哪些卡片并排展示
+- 卡片清单与区域定义集中在 `src/theme/layout.ts`：`CARD_META` 描述每张卡片（`regionPaired: true`
+  表示该区域并排展示），`PAIRS` 在 `DashboardPage` 中声明并排组合
 - 新增卡片：在 `CardId` 与 `CARD_META` 里登记 → 在 `DashboardPage` 的 `renderCard` 中渲染 →
   如需并排，加进 `PAIRS` 与 `DEFAULT_CARD_ORDER`；展示设置页会自动出现该卡片，无需改动设置页
-- 布局只保存「顺序 + 隐藏项」，未知/缺失的卡片在读取时会自动补全，因此升级不会丢配置
+- 布局只保存「顺序 + 隐藏项」，未知/缺失的卡片在读取时会自动补全；
+  **调整默认顺序或默认显隐时必须把 `LAYOUT_VERSION` 加 1**，否则老用户的本地配置会盖住新默认
+- 列表容器（`.list-scroll` / `.flow-scroll` / `.watch-scroll`）不要加 `max-height`，
+  卡片按内容自然展开是既定行为
 - 显示设置的入口统一放在 `TopControls`（首页头部第二行靠右），新增页面若要复用，
   把它挂到自己的顶部即可，状态仍由同一个 `useTheme()` 提供
 - 常用 px→rem 换算（基准 14px）：`11px=0.7857` `11.5px=0.8214` `12px=0.8571` `12.5px=0.8929`
