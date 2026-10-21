@@ -6,14 +6,19 @@
     python dev.py --web        # 只启动前端
 
 说明:
-    项目依赖安装在 backend/.venv 内（沙箱环境下 pip 无法写入用户目录），
+    项目依赖安装在 backend/.venv 内（受限环境下 pip 无法写入用户目录），
     backend/run.py 会自动把该目录加入模块搜索路径。
+
+    前端启动时会把 web/scripts/dev-preload.mjs 作为 --import 传入，
+    并以 file:// URL 形式传递（Windows 绝对路径会被 Node 当成协议名，
+    触发 ERR_UNSUPPORTED_ESM_URL_SCHEME）。
 """
 
 from __future__ import annotations
 
 import argparse
 import os
+import shutil
 import signal
 import subprocess
 import sys
@@ -33,15 +38,29 @@ WEB_PORT = os.getenv("ASHARE_WEB_PORT", "5173")
 
 
 def _node_executable() -> str:
-    """优先使用打包运行时里的 node，找不到再退回 PATH 上的 node。"""
+    """按优先级找 node：环境变量 ASHARE_NODE > PATH > 常见安装位置。
+
+    注意不要写死某台机器的路径，否则换机器会在启动前端时失败。
+    """
     candidates = [
-        os.getenv("ASHARE_NODE", ""),
-        r"C:\Users\zgj\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\node\bin\node.exe",
+        os.getenv("ASHARE_NODE"),
+        shutil.which("node"),
     ]
+    # 兜底：Windows 下常见的 node 安装位置
+    candidates.append(os.path.join(os.environ.get("ProgramFiles", ""), "nodejs", "node.exe"))
     for candidate in candidates:
         if candidate and Path(candidate).exists():
             return candidate
     return "node"
+
+
+def _preload_specifier() -> str:
+    """把预加载脚本转成 Node 能识别的模块说明符。
+
+    Windows 绝对路径（D:\\...）直接传给 --import 会被当成协议名，
+    触发 ERR_UNSUPPORTED_ESM_URL_SCHEME，必须转成 file:// URL。
+    """
+    return PRELOAD.as_uri()
 
 
 def _check(condition: bool, message: str, hint: str) -> bool:
@@ -64,9 +83,9 @@ def start_web() -> subprocess.Popen:
     node = _node_executable()
     command = [node]
     if PRELOAD.exists():
-        command += ["--import", str(PRELOAD)]
+        command += ["--import", _preload_specifier()]
     command += [str(NODE_MODULES / "vite" / "bin" / "vite.js"), "--port", WEB_PORT, "--strictPort"]
-    print(f"[启动] 前端页面  http://{API_HOST}:{WEB_PORT}")
+    print(f"[启动] 前端页面  http://{API_HOST}:{WEB_PORT}  (node: {node})")
     return subprocess.Popen(command, cwd=WEB_DIR)
 
 

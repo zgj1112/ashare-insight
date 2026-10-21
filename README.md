@@ -112,13 +112,36 @@
 
 ## 快速开始
 
+### 前置条件
+
+只需要两样东西，**Node 与 Python 均在 PATH 中即可**（具体版本不限，实测 Node 24 / Python 3.12）：
+
+| 依赖 | 检查命令 | 说明 |
+| --- | --- | --- |
+| Python ≥ 3.10 | `python --version` | 用标准库运行 `dev.py` / `run.py` |
+| Node ≥ 20 | `node --version` | 运行 Vite 开发服务器 |
+
+### 首次安装（只需做一次）
+
+```bash
+python backend/tools/bootstrap_deps.py   # 后端依赖 → backend/.venv（不污染全局 site-packages）
+cd web && npm install && cd ..           # 前端依赖 → web/node_modules
+```
+
+> 为什么后端不用 `pip install`：`bootstrap_deps.py` 直接把 wheel 解包到 `backend/.venv`，
+> 避免受限环境（临时目录不可写）下 pip 安装失败；`run.py` 启动时会自动把该目录加入模块搜索路径。
+> 若你本机 pip 正常，用 `pip install fastapi uvicorn httpx` 也可以。
+
 ### 一键启动（推荐）
 
 ```bash
-python dev.py            # 同时启动后端与前端
+python dev.py            # 同时启动后端与前端，Ctrl+C 一起退出
 python dev.py --backend  # 只启动后端
 python dev.py --web      # 只启动前端
 ```
+
+它做三件事：检查依赖是否装好 → 用当前 Python 启动 `backend/run.py`（8000）→
+用 Node 启动 Vite（5173，附带 `web/scripts/dev-preload.mjs` 预加载）。
 
 启动后访问：
 
@@ -130,18 +153,27 @@ python dev.py --web      # 只启动前端
 | http://127.0.0.1:8000/docs | 后端接口文档（Swagger UI） |
 | http://127.0.0.1:8000/api/market/overview | 总览看板聚合接口 |
 
-### 分步启动
+可用环境变量覆盖端口与 node 路径：`ASHARE_API_PORT`、`ASHARE_WEB_PORT`、`ASHARE_API_HOST`、`ASHARE_NODE`。
+
+### 分步启动（`dev.py` 不可用时）
 
 ```bash
-# 1) 安装后端依赖（依赖会装到 backend/.venv 内）
-python backend/tools/bootstrap_deps.py
-
-# 2) 启动后端
+# 1) 后端（8000）
 cd backend && python run.py --port 8000
 
-# 3) 安装并启动前端
-cd web && npm install && npm run dev
+# 2) 前端（5173，另开一个终端）
+cd web && npm run dev
 ```
+
+若 Vite 报 `spawn EPERM`（受限环境禁止子进程管道），改用带预加载的启动方式：
+
+```bash
+cd web && node --import ./scripts/dev-preload.mjs node_modules/vite/bin/vite.js --port 5173
+```
+
+> 注意：`--import` 后面**必须**是相对路径或 `file://` URL。
+> 在 Windows 上传绝对路径（`D:\...`）会报 `ERR_UNSUPPORTED_ESM_URL_SCHEME`，
+> 因为 Node 会把 `D:` 当成协议名。`dev.py` 已用 `Path.as_uri()` 处理，手动启动时请照上面写。
 
 ### 单服务模式（只跑后端）
 
@@ -237,10 +269,20 @@ ashare-insight/
 
 ## 开发环境注意事项
 
-本项目在受限沙箱环境下搭建，有两点与常规流程不同，已做兼容：
+本项目在受限沙箱环境下搭建，有两处与常规流程不同，已做兼容：
 
 1. **依赖安装位置**：`pip` 的临时目录不可写时会安装失败，因此 `backend/tools/bootstrap_deps.py` 直接从镜像下载 wheel 并用 `zipfile` 解包到 `backend/.venv`，`run.py` 启动时自动加载该目录。
-2. **Vite 启动**：沙箱禁止为「被捕获输出」的子进程建立管道，而 Vite 启动时会用 `net use` 探测盘符类型。`web/scripts/dev-preload.mjs` 会把这类探测替换为固定结果（仅拦截只读探测命令，其余命令照常执行），`npm run dev:sandbox` 会带上该预加载。
+2. **Vite 启动**：沙箱禁止为「被捕获输出」的子进程建立管道，而 Vite 启动时会用 `net use` 探测盘符类型。`web/scripts/dev-preload.mjs` 会把这类探测替换为固定结果（仅拦截只读探测命令，其余命令照常执行），`dev.py` 启动前端时会自动带上该预加载。
+
+### 常见启动报错
+
+| 报错 | 原因 | 解决 |
+| --- | --- | --- |
+| `ERR_UNSUPPORTED_ESM_URL_SCHEME`（protocol 'd:'） | 给 `node --import` 传了 Windows 绝对路径 | 用相对路径或 `file://` URL；`dev.py` 已自动处理 |
+| `spawn EPERM`（Vite 启动时） | 受限环境禁止子进程管道 | 用 `dev.py` 或带 `--import ./scripts/dev-preload.mjs` 启动 |
+| `端口已被占用` / `EADDRINUSE` | 8000 或 5173 已被其他进程占用 | 关掉旧进程，或设 `ASHARE_API_PORT` / `ASHARE_WEB_PORT` |
+| `未找到 uvicorn` | 后端依赖未安装 | `python backend/tools/bootstrap_deps.py` |
+| GitHub 推送超时 | 需要代理但代理未开 | 开代理后 `git config --local http.proxy http://127.0.0.1:7897`；不用代理则 `--unset` |
 
 ## 免责声明
 
