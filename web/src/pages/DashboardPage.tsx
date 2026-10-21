@@ -13,6 +13,7 @@ import { WatchList } from '../components/WatchList'
 import { useTheme } from '../theme/ThemeProvider'
 import { buildRows } from '../theme/layout'
 import type { CardId } from '../theme/layout'
+import type { CostMap } from '../hooks/usePositions'
 import type { MarketOverview, MarketStats, Quote } from '../types/market'
 
 /** 与后端 GAINERS_MAX_PERCENT 保持一致，仅用于文案展示 */
@@ -51,6 +52,9 @@ interface Props {
   lastUpdated: number | null
   onRefresh: () => void
   watchlist: WatchlistBinding
+  costs: CostMap
+  onSetCost: (code: string, price: number) => void
+  onRemoveCost: (code: string) => void
 }
 
 export function DashboardPage({
@@ -61,6 +65,9 @@ export function DashboardPage({
   lastUpdated,
   onRefresh,
   watchlist,
+  costs,
+  onSetCost,
+  onRemoveCost,
 }: Props) {
   const { isVisible, layout } = useTheme()
   const stats = data?.stats ?? EMPTY_STATS
@@ -75,6 +82,9 @@ export function DashboardPage({
             error={watchlist.error}
             usingDefault={watchlist.usingDefault}
             onRemove={watchlist.remove}
+            costs={costs}
+            onSetCost={onSetCost}
+            onRemoveCost={onRemoveCost}
           />
         )
       case 'main_inflow':

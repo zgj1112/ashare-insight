@@ -763,6 +763,149 @@
   margin-left: 6px;
 }
 
+/* ------------------------------------------------------ 自选：成本与盈亏 */
+.watch-table .col-cost {
+  width: 168px;
+  text-align: right;
+}
+
+.cost-btn {
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px dashed var(--border);
+  background: transparent;
+  color: var(--text-faint);
+  font-size: 0.8214rem;
+  white-space: nowrap;
+}
+
+.cost-btn:hover {
+  color: var(--accent-text);
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+}
+
+.cost-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-soft);
+  background: var(--bg-soft);
+  font-family: var(--mono);
+  font-size: 0.8571rem;
+  white-space: nowrap;
+}
+
+.cost-chip:hover {
+  border-color: var(--accent-border);
+}
+
+.cost-value {
+  color: var(--text-dim);
+}
+
+.cost-pnl {
+  font-weight: 600;
+}
+
+/* 行内成本编辑器 */
+.cost-editor-row td {
+  padding: 0 !important;
+  background: var(--panel-soft);
+}
+
+.cost-editor {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.cost-editor-label {
+  font-size: 0.8571rem;
+  color: var(--text-dim);
+}
+
+.cost-stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--panel);
+}
+
+.cost-stepper button {
+  padding: 5px 10px;
+  border: 0;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 0.8214rem;
+  white-space: nowrap;
+}
+
+.cost-stepper button:hover {
+  background: var(--panel-soft);
+  color: var(--text);
+}
+
+.cost-stepper input {
+  width: 110px;
+  padding: 6px 8px;
+  border: 0;
+  border-left: 1px solid var(--border-soft);
+  border-right: 1px solid var(--border-soft);
+  background: var(--bg-soft);
+  color: var(--text);
+  font-family: var(--mono);
+  text-align: center;
+  outline: none;
+}
+
+.cost-stepper input::-webkit-outer-spin-button,
+.cost-stepper input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.cost-quick,
+.cost-save,
+.cost-cancel {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text-dim);
+  font-size: 0.8571rem;
+  white-space: nowrap;
+}
+
+.cost-quick:hover,
+.cost-cancel:hover {
+  background: var(--panel-soft);
+  color: var(--text);
+}
+
+.cost-save {
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+  color: var(--accent-text-strong);
+  font-weight: 600;
+}
+
+.cost-save:hover {
+  background: var(--accent-soft-hover);
+}
+
+.cost-hint {
+  font-size: 0.7857rem;
+  color: var(--text-faint);
+}
+
 .remove-btn {
   width: 24px;
   height: 24px;
