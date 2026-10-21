@@ -76,6 +76,79 @@ export interface SectorItem {
   lead_price_fmt: string
 }
 
+export interface MoneyFlowTier {
+  key: string
+  label: string
+  inflow: number
+  outflow: number
+  net: number
+  total: number
+  inflow_fmt: string
+  outflow_fmt: string
+  net_fmt: string
+  net_ratio: number
+  net_ratio_fmt: string
+}
+
+export interface MoneyFlow {
+  code: string
+  name: string
+  trade_date: string
+  price: number
+  change_percent: number
+  amount: number
+  amount_fmt: string
+  turnover_rate: number | null
+  tiers: MoneyFlowTier[]
+  main_inflow: number
+  main_outflow: number
+  main_net: number
+  main_net_fmt: string
+  main_net_ratio: number
+  main_net_ratio_fmt: string
+  retail_net: number
+  retail_net_fmt: string
+  strength: number
+  strength_fmt: string
+  updated_at: string
+}
+
+export interface MinutePoint {
+  time: string
+  price: number
+  avg_price: number
+  volume: number
+}
+
+export interface StockDetail {
+  quote: Quote
+  flow: MoneyFlow
+  minutes: MinutePoint[]
+  prev_close: number
+  limit_up: number
+  limit_down: number
+  trade_date: string
+  source: string
+}
+
+export interface KlineBar {
+  date: string
+  open: number
+  close: number
+  high: number
+  low: number
+  volume: number
+  amount: number
+}
+
+export interface KlineResponse {
+  code: string
+  name: string
+  period: string
+  adjust: string
+  bars: KlineBar[]
+}
+
 export interface MarketStats {
   total: number
   up: number

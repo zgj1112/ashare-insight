@@ -113,6 +113,72 @@ class KlineBar(BaseModel):
     amount: float = 0.0
 
 
+class MoneyFlowTier(BaseModel):
+    """单一大单级别的资金流向。"""
+
+    key: str
+    label: str
+    inflow: float = Field(description="流入（元）")
+    outflow: float = Field(description="流出（元）")
+    net: float = Field(description="净额（元）")
+    total: float = Field(default=0.0, description="流入+流出，用于占比")
+    inflow_fmt: str = ""
+    outflow_fmt: str = ""
+    net_fmt: str = ""
+    net_ratio: float = Field(default=0.0, description="净额占成交额比例 %")
+    net_ratio_fmt: str = ""
+
+
+class MoneyFlow(BaseModel):
+    """个股实时资金流向（大单分级）。"""
+
+    code: str
+    name: str = ""
+    trade_date: str = ""
+    price: float = 0.0
+    change_percent: float = 0.0
+    amount: float = Field(default=0.0, description="成交额（元）")
+    amount_fmt: str = ""
+    turnover_rate: float | None = None
+
+    tiers: list[MoneyFlowTier] = Field(default_factory=list)
+    # 主力 = 超大单 + 大单
+    main_inflow: float = 0.0
+    main_outflow: float = 0.0
+    main_net: float = 0.0
+    main_net_fmt: str = ""
+    main_net_ratio: float = Field(default=0.0, description="主力净额占成交额 %")
+    main_net_ratio_fmt: str = ""
+    retail_net: float = Field(default=0.0, description="中小单净额（元）")
+    retail_net_fmt: str = ""
+    # 大单强度：超大单净额 / 成交额，衡量大资金参与度
+    strength: float = Field(default=0.0, description="超大单净额 / 成交额 %")
+    strength_fmt: str = ""
+    updated_at: str = ""
+
+
+class MinutePoint(BaseModel):
+    """分时点。"""
+
+    time: str = Field(description="HH:MM")
+    price: float
+    avg_price: float = 0.0
+    volume: float = Field(default=0.0, description="该分钟成交量（股）")
+
+
+class StockDetail(BaseModel):
+    """个股详情页聚合数据。"""
+
+    quote: Quote
+    flow: MoneyFlow
+    minutes: list[MinutePoint] = Field(default_factory=list)
+    prev_close: float = 0.0
+    limit_up: float = 0.0
+    limit_down: float = 0.0
+    trade_date: str = ""
+    source: str = ""
+
+
 class KlineResponse(BaseModel):
     code: str
     name: str = ""

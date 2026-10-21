@@ -1,0 +1,380 @@
+/** 个股详情页样式（图表、资金流、快照）。 */
+
+/* ---------------------------------------------------------------- 快照 */
+.quote-panel {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 16px;
+  flex-wrap: wrap;
+}
+
+.quote-main {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-shrink: 0;
+  padding-right: 24px;
+  border-right: 1px solid var(--border-soft);
+}
+
+.quote-price {
+  font-family: var(--mono);
+  font-size: 2.1429rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.quote-change {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--mono);
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 涨跌额与涨跌幅之间留出间隔（截图核对时发现会连在一起） */
+.quote-change span + span {
+  padding-left: 12px;
+}
+
+.quote-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px 20px;
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.quote-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px dashed var(--border-soft);
+  padding-bottom: 4px;
+}
+
+.quote-item dt {
+  font-size: 0.8214rem;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.quote-item dd {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 0.9286rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------ 资金流 */
+.flow-detail .panel-count.live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--up);
+  background: var(--up-soft);
+}
+
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--up);
+  animation: pulse 1.8s infinite;
+}
+
+.flow-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 16px 12px;
+  flex-wrap: wrap;
+}
+
+.flow-main-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.flow-main-label {
+  font-size: 0.8571rem;
+  color: var(--text-faint);
+}
+
+.flow-main-value {
+  font-family: var(--mono);
+  font-size: 2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+.flow-main-ratio {
+  font-family: var(--mono);
+  font-size: 0.9286rem;
+}
+
+.flow-main-right {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.flow-kv {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.flow-kv span {
+  font-size: 0.8214rem;
+  color: var(--text-faint);
+}
+
+.flow-kv strong {
+  font-family: var(--mono);
+  font-size: 1.0714rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.flow-gauge {
+  position: relative;
+  height: 6px;
+  margin: 0 16px 6px;
+  border-radius: 999px;
+  background: var(--border-soft);
+  overflow: hidden;
+}
+
+/* 25% / 50% / 75% 刻度，便于目测强度 */
+.flow-gauge::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(90deg, transparent 0 24.6%, var(--panel) 24.6% 25.4%, transparent 25.4% 49.6%, var(--panel) 49.6% 50.4%, transparent 50.4% 74.6%, var(--panel) 74.6% 75.4%, transparent 75.4%);
+  pointer-events: none;
+}
+
+.flow-gauge-caption {
+  margin: 0 16px 12px;
+  font-size: 0.7857rem;
+  color: var(--text-faint);
+}
+
+.flow-gauge-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.trend-up-bg {
+  background: var(--up);
+}
+
+.trend-down-bg {
+  background: var(--down);
+}
+
+.flow-detail-table .col-num {
+  font-family: var(--mono);
+  white-space: nowrap;
+  width: 150px;
+}
+
+.flow-detail-table .col-num.strong {
+  font-weight: 600;
+}
+
+/* -------------------------------------------------------------- 图表 */
+.chart-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-body {
+  padding: 8px 8px 12px;
+}
+
+.chart-svg {
+  display: block;
+  width: 100%;
+  height: 320px;
+}
+
+.chart-empty {
+  display: grid;
+  place-items: center;
+  height: 200px;
+  font-size: 0.9286rem;
+  color: var(--text-faint);
+}
+
+.grid-line {
+  stroke: var(--border-soft);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.grid-line.baseline {
+  stroke: var(--border);
+  stroke-dasharray: 4 4;
+}
+
+.axis-text {
+  fill: var(--text-faint);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.axis-text.percent {
+  font-size: 10px;
+}
+
+.axis-text.time {
+  font-size: 10px;
+}
+
+.price-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.6;
+  vector-effect: non-scaling-stroke;
+}
+
+.price-area {
+  fill: var(--accent);
+  opacity: 0.08;
+  stroke: none;
+}
+
+.avg-line {
+  fill: none;
+  stroke: var(--warn-text);
+  stroke-width: 1.2;
+  stroke-dasharray: 5 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.volume-up {
+  fill: var(--up);
+  opacity: 0.65;
+}
+
+.volume-down {
+  fill: var(--down);
+  opacity: 0.65;
+}
+
+.candle-up {
+  fill: var(--up);
+  stroke: var(--up);
+}
+
+.candle-down {
+  fill: transparent;
+  stroke: var(--down);
+}
+
+.candle-wick-up {
+  stroke: var(--up);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.candle-wick-down {
+  stroke: var(--down);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.ma-line {
+  fill: none;
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+}
+
+.ma-5 {
+  stroke: #e8a33d;
+}
+
+.ma-10 {
+  stroke: #4c8dff;
+}
+
+.ma-20 {
+  stroke: #b06bff;
+}
+
+.kline-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.kline-legend {
+  display: flex;
+  gap: 14px;
+  padding: 6px 10px 0;
+  font-size: 0.7857rem;
+  color: var(--text-faint);
+}
+
+.legend-item.ma-5 {
+  color: #e8a33d;
+}
+
+.legend-item.ma-10 {
+  color: #4c8dff;
+}
+
+.legend-item.ma-20 {
+  color: #b06bff;
+}
+
+.legend-item.hint {
+  margin-left: auto;
+}
+
+/* ---------------------------------------------------------- 领涨板块 */
+.related-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 16px 16px;
+}
+
+/* ---------------------------------------------------------------- 响应式 */
+@media (max-width: 1400px) {
+  .quote-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1024px) {
+  .quote-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .quote-main {
+    border-right: 0;
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .quote-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .flow-detail-table .col-num {
+    width: auto;
+  }
+}

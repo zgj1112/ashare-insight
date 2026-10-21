@@ -54,6 +54,14 @@ SINA_FUND_FLOW_URL = (
     "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/"
     "MoneyFlow.ssl_bkzj_ssggzj"
 )
+# 个股实时资金流向：r0 超大单 / r1 大单 / r2 中单 / r3 小单
+SINA_STOCK_FLOW_URL = (
+    "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/"
+    "MoneyFlow.ssi_ssfx_flzjtj"
+)
+# 腾讯：分时（当日逐分钟）与日 K（前复权）
+QQ_MINUTE_URL = "https://web.ifzq.gtimg.cn/appstock/app/minute/query?code={code}"
+QQ_KLINE_URL = "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param={code},{period},,,{count},qfq"
 # 板块行情：行业（申万风格）与概念板块，返回 JS 变量赋值的 JSON
 SINA_SECTOR_URLS = {
     "industry": "https://vip.stock.finance.sina.com.cn/q/view/newSinaHy.php",
@@ -71,6 +79,10 @@ LIST_HEADERS = {
 SECTOR_HEADERS = {
     "User-Agent": USER_AGENT,
     "Referer": "https://finance.sina.com.cn/",
+}
+QQ_HEADERS = {
+    "User-Agent": USER_AGENT,
+    "Referer": "https://gu.qq.com/",
 }
 
 # 支持的榜单排序字段 -> 新浪接口的 sort 参数
@@ -284,6 +296,123 @@ class SinaClient:
             "lead_change_percent": to_float(fields[9]),
             "lead_price": to_float(fields[10]),
         }
+
+    def fetch_stock_flow(self, code: str) -> dict | None:
+        """个股实时资金流向（按单笔金额分级）。
+
+        数据源字段：
+          r0/r0_in/r0_out 超大单（主力）成交额/流入/流出，单位元
+          r1 大单、r2 中单、r3 小单，字段结构相同
+          r0x_ratio       超大单净额占成交额比例（百分数，如 86.6 表示 86.6%）
+          netamount       全部资金净额
+        """
+        normalized, _, _ = normalize_code(code)
+        url = f"{SINA_STOCK_FLOW_URL}?daima={normalized}"
+        text = self._request(url, LIST_HEADERS, "gbk").strip()
+        if not text or "__ERROR" in text:
+            return None
+        try:
+            raw = json.loads(text)
+        except json.JSONDecodeError:
+            return None
+        if not isinstance(raw, dict):
+            return None
+
+        tiers: list[dict] = []
+        for key, label in (("r0", "超大单"), ("r1", "大单"), ("r2", "中单"), ("r3", "小单")):
+            inflow = to_float(raw.get(f"{key}_in"))
+            outflow = to_float(raw.get(f"{key}_out"))
+            total = to_float(raw.get(key))
+            tiers.append(
+                {
+                    "key": key,
+                    "label": label,
+                    "inflow": inflow,
+                    "outflow": outflow,
+                    "net": inflow - outflow,
+                    "total": total or (inflow + outflow),
+                }
+            )
+        return {
+            "code": normalized,
+            "name": str(raw.get("name") or "").strip(),
+            "price": to_float(raw.get("trade")),
+            "change_percent": to_float(raw.get("changeratio")) * 100,
+            "volume": to_float(raw.get("volume")),
+            "turnover_rate": to_optional_float(raw.get("turnover")),
+            "net_amount": to_float(raw.get("netamount")),
+            "big_ratio": to_float(raw.get("r0x_ratio")),
+            "capital": to_float(raw.get("curr_capital")),
+            "tiers": tiers,
+        }
+
+    def fetch_minutes(self, code: str) -> dict:
+        """当日分时（腾讯）：返回交易日与含时间、价格、均价、分钟成交量的点列。"""
+        normalized, _, _ = normalize_code(code)
+        url = QQ_MINUTE_URL.format(code=normalized)
+        text = self._request(url, QQ_HEADERS, "utf-8")
+        try:
+            payload = json.loads(text)
+        except json.JSONDecodeError as exc:
+            raise SinaClientError(f"分时数据解析失败: {exc}") from exc
+        node = (payload.get("data") or {}).get(normalized) or {}
+        inner = node.get("data") or {}
+        raw_points = inner.get("data") or []
+        trade_date = str(inner.get("date") or "")
+
+        points: list[dict] = []
+        last_volume_lots = 0.0
+        for line in raw_points:
+            parts = str(line).split()
+            if len(parts) < 4:
+                continue
+            clock, price_text, volume_text, amount_text = parts[:4]
+            price = to_float(price_text)
+            cumulative_lots = to_float(volume_text)
+            cumulative_amount = to_float(amount_text)
+            # 累计额 / 累计股数 = 当日均价
+            avg_price = cumulative_amount / (cumulative_lots * 100) if cumulative_lots else price
+            minute_shares = max(0.0, (cumulative_lots - last_volume_lots) * 100)
+            last_volume_lots = cumulative_lots
+            points.append(
+                {
+                    "time": f"{clock[:2]}:{clock[2:]}" if len(clock) == 4 else clock,
+                    "price": price,
+                    "avg_price": round(avg_price, 3),
+                    "volume": minute_shares,
+                }
+            )
+        return {"date": trade_date, "points": points}
+
+    def fetch_kline(self, code: str, period: str = "day", count: int = 120) -> list[dict]:
+        """K 线（腾讯前复权）。period 取 day / week / month。"""
+        normalized, _, _ = normalize_code(code)
+        period = period if period in ("day", "week", "month") else "day"
+        url = QQ_KLINE_URL.format(code=normalized, period=period, count=max(20, min(count, 800)))
+        text = self._request(url, QQ_HEADERS, "utf-8")
+        try:
+            payload = json.loads(text)
+        except json.JSONDecodeError as exc:
+            raise SinaClientError(f"K 线数据解析失败: {exc}") from exc
+        node = (payload.get("data") or {}).get(normalized) or {}
+        rows = node.get(f"qfq{period}") or node.get(period) or []
+        bars: list[dict] = []
+        for row in rows:
+            if len(row) < 6:
+                continue
+            bars.append(
+                {
+                    "date": str(row[0]),
+                    "open": to_float(row[1]),
+                    "close": to_float(row[2]),
+                    "high": to_float(row[3]),
+                    "low": to_float(row[4]),
+                    # 腾讯日 K 的成交量单位为手，统一换算成股
+                    "volume": to_float(row[5]) * 100,
+                    "amount": to_float(row[6]) if len(row) > 6 else 0.0,
+                }
+            )
+        return bars
 
     def fetch_rank(
         self,

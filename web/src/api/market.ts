@@ -2,7 +2,15 @@
  * 后端接口封装。开发环境通过 Vite 代理访问 /api，无需处理跨域。
  */
 
-import type { MarketOverview, Quote, SearchResponse, SectorItem } from '../types/market'
+import type {
+  KlineResponse,
+  MarketOverview,
+  MoneyFlow,
+  Quote,
+  SearchResponse,
+  SectorItem,
+  StockDetail,
+} from '../types/market'
 
 const BASE = import.meta.env.VITE_API_BASE ?? ''
 
@@ -65,4 +73,27 @@ export function fetchSectors(
 /** 自选股默认清单 */
 export function fetchDefaultWatchlist(signal?: AbortSignal): Promise<string[]> {
   return request<string[]>('/api/market/watchlist/default', signal)
+}
+
+/** 个股详情：快照 + 分时 + 实时资金流 */
+export function fetchStockDetail(code: string, signal?: AbortSignal): Promise<StockDetail> {
+  return request<StockDetail>(`/api/market/detail/${code}`, signal)
+}
+
+/** 个股实时资金流（大单分级，前端高频轮询用） */
+export function fetchMoneyFlow(code: string, signal?: AbortSignal): Promise<MoneyFlow> {
+  return request<MoneyFlow>(`/api/market/money-flow/${code}`, signal)
+}
+
+/** K 线数据 */
+export function fetchKline(
+  code: string,
+  period: 'day' | 'week' | 'month' = 'day',
+  limit = 120,
+  signal?: AbortSignal,
+): Promise<KlineResponse> {
+  return request<KlineResponse>(
+    `/api/market/kline/${code}?period=${period}&limit=${limit}`,
+    signal,
+  )
 }

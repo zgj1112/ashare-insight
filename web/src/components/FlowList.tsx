@@ -1,5 +1,6 @@
 /** 主力资金净流入榜（首页卡片之一）。 */
 
+import { navigate } from '../router'
 import type { FlowItem } from '../types/market'
 import { plainCode, trendClass } from '../utils/format'
 
@@ -47,7 +48,12 @@ export function FlowBoards({ items, loading }: Props) {
                   </tr>
                 ))
               : items.map((item, index) => (
-                  <tr key={item.code}>
+                  <tr
+                    key={item.code}
+                    className="clickable-row"
+                    onClick={() => navigate('stock', item.code)}
+                    title={`查看 ${item.name} 详情`}
+                  >
                     <td className="col-rank">{index + 1}</td>
                     <td className="col-name">
                       <span className="stock-name">{item.name}</span>

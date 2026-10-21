@@ -7,7 +7,7 @@
 
 import type { MarketOverview } from '../types/market'
 import { formatClock } from '../utils/format'
-import { navigate, usePage } from '../router'
+import { navigate, useRoute } from '../router'
 import { FontScaleToggle } from './FontScaleToggle'
 import { RowCountToggle } from './RowCountToggle'
 import { ThemeToggle } from './ThemeToggle'
@@ -20,7 +20,7 @@ interface Props {
 export function TopControls({ overview, lastUpdated }: Props) {
   const state = overview?.market_state ?? 'closed'
   const stateText = overview?.market_state_text ?? '加载中'
-  const page = usePage()
+  const page = useRoute().page
 
   return (
     <div className="top-controls">

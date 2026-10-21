@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from statistics import median
@@ -15,23 +16,37 @@ from app.core.config import (
     RANK_FETCH_SIZE,
     ROW_COUNT_MAX,
     TTL_INDEX_QUOTE,
+    TTL_MONEY_FLOW,
     TTL_RANK,
     TTL_SNAPSHOT,
     TTL_STOCK_LIST,
     TTL_WATCH_QUOTE,
     WATCHLIST_MAX,
 )
-from app.core.utils import CN_TZ, format_amount, format_percent, format_price, limit_prices, market_state
+from app.core.utils import (
+    CN_TZ,
+    format_amount,
+    format_percent,
+    format_price,
+    limit_prices,
+    market_state,
+    normalize_code,
+)
 from app.models.market import (
     FlowItem,
     IndexCard,
+    KlineBar,
     KlineResponse,
     MarketOverview,
     MarketStats,
+    MinutePoint,
+    MoneyFlow,
+    MoneyFlowTier,
     Quote,
     RankResponse,
     SearchResponse,
     SectorItem,
+    StockDetail,
 )
 from app.services.sina_client import SinaClient, build_display_fields
 
@@ -54,6 +69,8 @@ _rank_cache = TTLCache(TTL_RANK, "rank")
 _snapshot_cache = TTLCache(TTL_SNAPSHOT, "snapshot")
 _stock_list_cache = TTLCache(TTL_STOCK_LIST, "stock_list")
 _watch_cache = TTLCache(TTL_WATCH_QUOTE, "watchlist")
+# 个股实时资金流：按代码存最近一次结果，自带时间戳（前端高频轮询）
+_flow_cache = TTLCache(TTL_STOCK_LIST, "money_flow")
 
 # 全市场清单的代码索引（供自选补齐换手率等字段），预热是懒加载的
 _stock_index_cache = TTLCache(TTL_STOCK_LIST, "stock_index")
@@ -362,8 +379,21 @@ def get_fund_flow_rank(order: str = "desc", limit: int = 20) -> list[FlowItem]:
 
 
 def get_quote(code: str) -> Quote | None:
-    rows = client.fetch_quotes([code])
-    return _to_quote(rows[0]) if rows else None
+    """单只标的行情快照（用全市场清单补齐换手率等字段）。"""
+    normalized, _, _ = normalize_code(code)
+    index = _stock_index()
+    if not index:
+        _ensure_stock_index_warming()
+    rows = client.fetch_quotes([normalized])
+    if not rows:
+        return None
+    row = rows[0]
+    extra = index.get(row["code"])
+    if extra:
+        for field in ("turnover_rate", "pe", "pb", "market_cap", "float_cap"):
+            if row.get(field) is None and extra.get(field) is not None:
+                row[field] = extra[field]
+    return _to_quote(row)
 
 
 def get_quotes(codes: list[str], use_cache: bool = True) -> list[Quote]:
@@ -424,8 +454,140 @@ def get_default_watchlist() -> list[str]:
 
 
 def get_kline(code: str, period: str = "day", adjust: str = "qfq", limit: int = 120) -> KlineResponse:
-    """日/周/月 K 线。当前数据源暂未接入，保留接口占位。"""
-    return KlineResponse(code=code, period=period, adjust=adjust, bars=[])
+    """日/周/月 K 线（前复权，数据源腾讯）。"""
+    normalized, _, _ = normalize_code(code)
+    cache_key = f"kline|{normalized}|{period}|{limit}"
+    store = _rank_cache.get_or_load(lambda: {})
+    if cache_key not in store:
+        store[cache_key] = client.fetch_kline(normalized, period=period, count=limit)
+    bars = [KlineBar(**bar) for bar in store[cache_key]]
+    quote = get_quote(normalized)
+    return KlineResponse(
+        code=normalized,
+        name=quote.name if quote else "",
+        period=period,
+        adjust=adjust,
+        bars=bars,
+    )
+
+
+def _build_money_flow(code: str, quote: Quote | None, raw: dict) -> MoneyFlow:
+    """把资金流原始数据整理成模型，并计算主力（超大单+大单）汇总。"""
+    amount = (quote.amount if quote else 0.0) or 0.0
+    tiers: list[MoneyFlowTier] = []
+    tier_total = sum(item.get("total") or 0.0 for item in raw.get("tiers", [])) or 1.0
+    for item in raw.get("tiers", []):
+        net = item["net"]
+        net_ratio = (net / amount * 100) if amount else 0.0
+        tiers.append(
+            MoneyFlowTier(
+                key=item["key"],
+                label=item["label"],
+                inflow=round(item["inflow"], 2),
+                outflow=round(item["outflow"], 2),
+                net=round(net, 2),
+                total=round(item["total"], 2),
+                inflow_fmt=format_amount(item["inflow"]),
+                outflow_fmt=format_amount(item["outflow"]),
+                net_fmt=format_amount(net),
+                net_ratio=round(net_ratio, 2),
+                net_ratio_fmt=format_percent(net_ratio),
+            )
+        )
+
+    by_key = {tier.key: tier for tier in tiers}
+    main_in = (by_key["r0"].inflow if "r0" in by_key else 0.0) + (
+        by_key["r1"].inflow if "r1" in by_key else 0.0
+    )
+    main_out = (by_key["r0"].outflow if "r0" in by_key else 0.0) + (
+        by_key["r1"].outflow if "r1" in by_key else 0.0
+    )
+    main_net = main_in - main_out
+    retail_net = (by_key["r2"].net if "r2" in by_key else 0.0) + (
+        by_key["r3"].net if "r3" in by_key else 0.0
+    )
+    main_ratio = (main_net / amount * 100) if amount else 0.0
+    strength = ((by_key["r0"].net if "r0" in by_key else 0.0) / amount * 100) if amount else 0.0
+
+    return MoneyFlow(
+        code=raw.get("code", code),
+        name=raw.get("name") or (quote.name if quote else ""),
+        trade_date=(quote.trade_time.split(" ")[0] if quote and quote.trade_time else ""),
+        price=quote.price if quote else raw.get("price", 0.0),
+        change_percent=quote.change_percent if quote else raw.get("change_percent", 0.0),
+        amount=round(amount, 2),
+        amount_fmt=format_amount(amount),
+        turnover_rate=quote.turnover_rate if quote else raw.get("turnover_rate"),
+        tiers=tiers,
+        main_inflow=round(main_in, 2),
+        main_outflow=round(main_out, 2),
+        main_net=round(main_net, 2),
+        main_net_fmt=format_amount(main_net),
+        main_net_ratio=round(main_ratio, 2),
+        main_net_ratio_fmt=format_percent(main_ratio),
+        retail_net=round(retail_net, 2),
+        retail_net_fmt=format_amount(retail_net),
+        strength=round(strength, 2),
+        strength_fmt=f"{strength:+.2f}%",
+        updated_at=datetime.now(CN_TZ).strftime("%H:%M:%S"),
+    )
+
+
+def get_money_flow(code: str) -> MoneyFlow:
+    """实时资金流向（大单分级），缓存 5 秒以便前端高频轮询。"""
+    normalized, _, _ = normalize_code(code)
+    cache_key = f"flow|{normalized}"
+    store = _flow_cache.get_or_load(lambda: {})
+    cached = store.get(cache_key)
+    if cached is not None and time.time() - cached[0] < TTL_MONEY_FLOW:
+        return cached[1]
+
+    raw = client.fetch_stock_flow(normalized)
+    quote = get_quote(normalized)
+    flow = (
+        _build_money_flow(normalized, quote, raw)
+        if raw
+        else MoneyFlow(code=normalized, name=quote.name if quote else "")
+    )
+    store.clear()  # 只保留最近查询的个股，避免缓存无限增长
+    store[cache_key] = (time.time(), flow)
+    return flow
+
+
+def get_stock_detail(code: str) -> StockDetail:
+    """个股详情页聚合数据：快照 + 分时 + 实时资金流。"""
+    normalized, symbol, _ = normalize_code(code)
+    quote = get_quote(normalized)
+    if quote is None:
+        raise ValueError(f"未找到标的: {code}")
+
+    try:
+        minutes = client.fetch_minutes(normalized)
+    except Exception as exc:  # 分时失败不影响资金流与快照展示
+        logger.warning("分时数据获取失败 %s: %s", normalized, exc)
+        minutes = {"date": "", "points": []}
+
+    flow = get_money_flow(normalized)
+    upper, lower = limit_prices(normalized, quote.prev_close, quote.name)
+    trade_date = _normalize_date(minutes.get("date") or "") or _normalize_date(quote.trade_time or "")
+    return StockDetail(
+        quote=quote,
+        flow=flow,
+        minutes=[MinutePoint(**point) for point in minutes.get("points", [])],
+        prev_close=quote.prev_close,
+        limit_up=upper,
+        limit_down=lower,
+        trade_date=trade_date,
+        source="新浪财经（资金流）+ 腾讯（分时）",
+    )
+
+
+def _normalize_date(value: str) -> str:
+    """把数据源里的 20261014 或 '2026-10-14 15:00:00' 统一成 2026-10-14。"""
+    text = value.strip().split(" ")[0].replace("-", "")
+    if len(text) == 8 and text.isdigit():
+        return f"{text[:4]}-{text[4:6]}-{text[6:]}"
+    return value.strip().split(" ")[0]
 
 
 def search(keyword: str, limit: int = 10) -> SearchResponse:

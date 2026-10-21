@@ -20,6 +20,10 @@
 
 ![展示设置页](docs/screenshot-settings.png)
 
+个股详情页（实时大单资金流）：
+
+![个股详情页](docs/screenshot-detail.png)
+
 看板包含（自上而下，顺序可在展示设置中调整）：
 
 1. **市场情绪**：单行横条 —— 左侧标题、中间涨跌平分布条、右侧上涨/下跌/平盘/涨停/跌停、上涨占比与成交额
@@ -33,6 +37,21 @@
 顶部第一行为品牌与搜索、刷新；第二行为市场状态、数据时间与显示设置（**展示设置**、**行数 10/20/30**、**字体 小/中/大**、**主题 浅色/深色**）。页面每 30 秒自动刷新，也可手动刷新。
 
 > 卡片一律**不限高**：选 20/30 条时列表完整展开，不出现内部滚动条。行数越多页面越长，需要看哪块直接滚动页面即可。
+
+### 个股详情页（`#/stock/sh600519`）
+
+从自选或任一榜单点击行即可进入，页面重点在**实时大单资金**：
+
+1. **行情快照**：大号最新价与涨跌幅，右侧 12 项关键指标（今开/昨收/最高/最低/成交量/成交额/换手率/振幅/涨停/跌停/市盈率/总市值）
+2. **实时资金流**（核心，每 10 秒刷新）：
+   - 顶部大字显示 **主力净额（超大单 + 大单）**，以及占成交额比例
+   - 强度条按 0–100% **等比**显示主力净额占比，并标注刻度，不做放大避免误读
+   - 四级明细分表：**超大单（单笔 ≥ 100 万）/ 大单（20–100 万）/ 中单（4–20 万）/ 小单（< 4 万）**，
+     每级给出流入、流出、净额与占成交额比例
+3. **行情走势**：分时图（价格线 + 昨收均价参考 + 分钟成交量柱）与 日 K（前复权 + MA5/10/20）切换
+4. **领涨板块**：行业板块整体涨幅胶囊，用于判断个股所处板块氛围
+
+资金流数据按标的缓存 5 秒，前端每 10 秒轮询；页头可一键加入/移出自选。
 
 ### 展示设置页
 
@@ -106,6 +125,8 @@ python dev.py --web      # 只启动前端
 | 地址 | 说明 |
 | --- | --- |
 | http://127.0.0.1:5173 | 前端页面（Vite 开发服务器，含热更新） |
+| http://127.0.0.1:5173/#/stock/sh600519 | 个股详情页（把 `sh600519` 换成任意代码） |
+| http://127.0.0.1:5173/#/settings | 展示设置页 |
 | http://127.0.0.1:8000/docs | 后端接口文档（Swagger UI） |
 | http://127.0.0.1:8000/api/market/overview | 总览看板聚合接口 |
 
@@ -159,9 +180,11 @@ ashare-insight/
       ├─ router.ts              # 极简 hash 路由：#/ 看板、#/settings 展示设置
       ├─ pages/
       │  ├─ DashboardPage.tsx   # 看板页：按布局配置渲染卡片
-      │  └─ SettingsPage.tsx    # 展示设置页：卡片顺序与显隐
-      ├─ api/market.ts          # 接口封装
-      ├─ hooks/                 # useMarket（总览/搜索）、useWatchlist（自选）
+      │  ├─ SettingsPage.tsx    # 展示设置页：卡片顺序与显隐
+      │  └─ StockDetailPage.tsx # 个股详情页：实时资金流 + 分时/日K
+      ├─ components/charts/     # IntradayChart / KLineChart / MoneyFlowPanel
+      │                         # PriceChartPanel / chartUtils（SVG 手写，无图表库）
+      ├─ hooks/                 # useMarket（总览/搜索）、useWatchlist、useStockDetail
       ├─ theme/                 # ThemeProvider、useTheme、主题/字号/行数/布局
       ├─ styles/theme.css       # 全局 CSS 变量（明/暗两套 + 根字号）与基础样式
       ├─ components/            # AppHeader / TopControls / IndexBoard / WatchList
@@ -185,7 +208,9 @@ ashare-insight/
 | GET | `/api/market/quotes?codes=sh600519,sz300750` | 批量行情（自选列表用，返回顺序与入参一致） |
 | GET | `/api/market/watchlist/default` | 自选股默认清单 |
 | GET | `/api/market/quote/{code}` | 单只标的实时行情，如 `sh600519` |
-| GET | `/api/market/kline/{code}` | K 线数据（**接口已占位，数据源待接入**） |
+| GET | `/api/market/detail/{code}` | 个股详情聚合（快照 + 分时 + 实时资金流） |
+| GET | `/api/market/money-flow/{code}` | 个股实时资金流（超大单/大单/中单/小单，前端每 10 秒轮询） |
+| GET | `/api/market/kline/{code}?period=day&limit=60` | K 线（前复权，period=day/week/month） |
 
 ### 数据源与字段约定
 

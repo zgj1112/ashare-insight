@@ -1,5 +1,6 @@
 /** 自选列表（首页优先展示）。 */
 
+import { navigate } from '../router'
 import type { Quote } from '../types/market'
 import { plainCode, trendArrow, trendClass } from '../utils/format'
 
@@ -53,7 +54,12 @@ export function WatchList({ quotes, loading, error, usingDefault, onRemove }: Pr
           </thead>
           <tbody>
             {quotes.map((item) => (
-              <tr key={item.code}>
+              <tr
+                key={item.code}
+                className="clickable-row"
+                onClick={() => navigate('stock', item.code)}
+                title={`查看 ${item.name} 详情`}
+              >
                 <td className="col-name">
                   <span className="stock-name">{item.name}</span>
                   <span className="stock-code">{plainCode(item.code)}</span>
@@ -75,7 +81,10 @@ export function WatchList({ quotes, loading, error, usingDefault, onRemove }: Pr
                     className="remove-btn"
                     title={`从自选中移除 ${item.name}`}
                     aria-label={`从自选中移除 ${item.name}`}
-                    onClick={() => onRemove(item.code)}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      onRemove(item.code)
+                    }}
                   >
                     ×
                   </button>

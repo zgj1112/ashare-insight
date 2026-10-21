@@ -25,6 +25,8 @@ TTL_RANK = 15
 TTL_SNAPSHOT = 30
 TTL_STOCK_LIST = 12 * 60 * 60
 TTL_WATCH_QUOTE = 5
+# 个股实时资金流（详情页高频轮询用）
+TTL_MONEY_FLOW = 5
 
 # 自选股默认清单（前端首次访问时使用，之后以浏览器本地记录为准）
 DEFAULT_WATCHLIST = ["sh600519", "sz300750"]

@@ -533,6 +533,11 @@
   background: var(--panel-soft);
 }
 
+/* 可点击进入个股详情 */
+.clickable-row {
+  cursor: pointer;
+}
+
 .col-rank {
   width: 40px;
   color: var(--text-faint);

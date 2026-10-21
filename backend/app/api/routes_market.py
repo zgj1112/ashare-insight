@@ -8,10 +8,12 @@ from app.models.market import (
     FlowItem,
     KlineResponse,
     MarketOverview,
+    MoneyFlow,
     Quote,
     RankResponse,
     SearchResponse,
     SectorItem,
+    StockDetail,
 )
 from app.services import market_service
 
@@ -49,6 +51,24 @@ def search(
     limit: int = Query(10, ge=1, le=50),
 ) -> SearchResponse:
     return market_service.search(keyword, limit=limit)
+
+
+@router.get("/detail/{code}", response_model=StockDetail, summary="个股详情（快照 + 分时 + 实时资金流）")
+def detail(code: str) -> StockDetail:
+    try:
+        return market_service.get_stock_detail(code)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"详情数据获取失败: {exc}") from exc
+
+
+@router.get("/money-flow/{code}", response_model=MoneyFlow, summary="个股实时资金流向（大单分级）")
+def money_flow(code: str) -> MoneyFlow:
+    try:
+        return market_service.get_money_flow(code)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"资金流获取失败: {exc}") from exc
 
 
 @router.get("/quote/{code}", response_model=Quote, summary="单只标的实时行情")
