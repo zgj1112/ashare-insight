@@ -171,6 +171,20 @@ python dev.py --web      # 只启动前端
 
 可用环境变量覆盖端口与 node 路径：`ASHARE_API_PORT`、`ASHARE_WEB_PORT`、`ASHARE_API_HOST`、`ASHARE_NODE`。
 
+### 在线部署（Vercel）
+
+项目已配置好 Vercel 的「静态前端 + Python Serverless 后端」形态，推送到 `main` 即自动部署：
+
+- 线上地址：**https://ashare-insight.vercel.app**
+- 导入方式：Vercel → Add New → Project → Import 该仓库；**应用程序预设必须选 `Other`**（不要选它建议的 Services，那会忽略根目录 `vercel.json`）
+- 配置全在 `vercel.json`：`web` 目录构建 → `web/dist` 交给 CDN；`/api/(.*)` 改写到 `api/index.py`（Python 函数，注入 backend 路径后暴露 FastAPI 的 app）
+- 依赖仅 `fastapi`（`requirements.txt`），行情抓取全走标准库
+
+两个部署特有的注意点：
+
+1. **冷启动较慢**：Serverless 实例的内存缓存不共享，新实例首次请求要现拉全市场（实测最慢 25s，已把 `maxDuration` 放宽到 30s）；建议把 Project → Settings → Functions → Function Region 改成 **Hong Kong (hkg1)** 并 Redeploy，国内数据源的延迟会明显下降
+2. **Vercel 构建机在海外**：若构建或运行期访问新浪/腾讯被拒，考虑后端换国内平台（如阿里云函数计算），前端用 `VITE_API_BASE` 指向后端地址即可
+
 ### 分步启动（`dev.py` 不可用时）
 
 ```bash
