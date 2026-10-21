@@ -315,8 +315,11 @@
 }
 
 .kline-wrap {
+  position: relative;
   display: flex;
   flex-direction: column;
+  cursor: crosshair;
+  user-select: none;
 }
 
 .kline-legend {
@@ -325,6 +328,91 @@
   padding: 6px 10px 0;
   font-size: 0.7857rem;
   color: var(--text-faint);
+}
+
+/* 坐标轴文字 */
+.axis-text.axis-price {
+  fill: var(--text-dim);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.axis-text.axis-date {
+  fill: var(--text-faint);
+  font-size: 11px;
+}
+
+.axis-text.axis-label {
+  fill: var(--text-faint);
+  font-size: 10px;
+}
+
+/* 十字线与价格游标 */
+.crosshair line {
+  stroke: var(--text-faint);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  pointer-events: none;
+}
+
+.crosshair-price {
+  fill: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+  background: var(--panel);
+}
+
+/* 悬停明细浮层 */
+.kline-tooltip {
+  position: absolute;
+  z-index: 5;
+  width: 196px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--panel);
+  box-shadow: var(--shadow-panel);
+  pointer-events: none;
+}
+
+.tooltip-date {
+  margin-bottom: 6px;
+  font-family: var(--mono);
+  font-size: 0.8571rem;
+  color: var(--text);
+}
+
+.tooltip-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 3px 10px;
+  margin: 0;
+}
+
+.tooltip-grid > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.tooltip-grid .tooltip-wide {
+  grid-column: 1 / -1;
+  border-top: 1px dashed var(--border-soft);
+  padding-top: 4px;
+  margin-top: 2px;
+}
+
+.tooltip-grid dt {
+  font-size: 0.7857rem;
+  color: var(--text-faint);
+}
+
+.tooltip-grid dd {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 0.8214rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .legend-item.ma-5 {
